@@ -1,0 +1,49 @@
+{
+  "precision_weight": 0.4,
+  "complexity_penalty": 0.4,
+  "learning_rate": 0.01,
+  "average_free_energy_by_state": {
+    "breath_control": 0.460356157015605,
+    "mind_wandering": 0.4495135204789797,
+    "meta_awareness": 0.49333687519075503,
+    "redirect_breath": 0.47688151412882906
+  },
+  "average_prediction_error_by_state": {
+    "breath_control": 0.060356157015604955,
+    "mind_wandering": 0.04951352047897972,
+    "meta_awareness": 0.09333687519075506,
+    "redirect_breath": 0.07688151412882908
+  },
+  "average_precision_by_state": {
+    "breath_control": 0.7888732523268258,
+    "mind_wandering": 0.6294018990065847,
+    "meta_awareness": 0.8605233101408368,
+    "redirect_breath": 0.8374988441753236
+  },
+  "network_expectations": {
+    "breath_control": {
+      "DMN": 0.34818246638119965,
+      "VAN": 0.4232082559338979,
+      "DAN": 0.7229924853654804,
+      "FPN": 0.5577271243113213
+    },
+    "mind_wandering": {
+      "DMN": 0.7607500249191782,
+      "VAN": 0.486887066197652,
+      "DAN": 0.26887051369601633,
+      "FPN": 0.404672052745765
+    },
+    "meta_awareness": {
+      "DMN": 0.37886574709034837,
+      "VAN": 0.7008899601177309,
+      "DAN": 0.4783642175792455,
+      "FPN": 0.4726332730503579
+    },
+    "redirect_breath": {
+      "DMN": 0.308095947620776,
+      "VAN": 0.46830112034444044,
+      "DAN": 0.6478360902640818,
+      "FPN": 0.5779547547103635
+    }
+  }
+}

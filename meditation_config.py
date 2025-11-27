@@ -47,7 +47,7 @@ class DwellTimeConfig:
         return cls(
             breath_control=(5, 15),
             mind_wandering=(15, 30),
-            meta_awareness=(2, 5),
+            meta_awareness=(2, 7),
             redirect_breath=(2, 5)
         )
     
@@ -56,8 +56,8 @@ class DwellTimeConfig:
         return cls(
             breath_control=(15, 25),
             mind_wandering=(8, 12),
-            meta_awareness=(1, 3),
-            redirect_breath=(1, 3)
+            meta_awareness=(2, 4),
+            redirect_breath=(2, 4)
         )
 
 @dataclass
@@ -144,10 +144,10 @@ class NetworkModulationConfig:
             state_modifiers={}
         )
         config.dmn_suppression["breath_control"] = ContextualEffect(
-            base_value=EffectMagnitude.STRONG  # Strong suppression (0.3)
+            base_value=EffectMagnitude.MODERATE  # Strong suppression (0.3)
         )
         config.dmn_suppression["redirect_breath"] = ContextualEffect(
-            base_value=EffectMagnitude.STRONG  # Strong suppression (0.3)
+            base_value=EffectMagnitude.MODERATE  # Moderate suppression (0.2)
         )
         
         config.dmn_suppression["meta_awareness"] = ContextualEffect(
@@ -204,14 +204,14 @@ class NetworkModulationConfig:
         
         # DMN boosts
         config.dmn_boost["mind_wandering"] = ContextualEffect(
-            base_value=EffectMagnitude.MODERATE,  # Higher boost to match novice levels (0.2)
+            base_value=EffectMagnitude.WEAK,  # Keep DMN engagement present but subdued (0.1)
             state_modifiers={}
         )
         config.dmn_suppression["breath_control"] = ContextualEffect(
-            base_value=EffectMagnitude.STRONG  # Strong suppression (0.3)
+            base_value=EffectMagnitude.MODERATE  # Moderate suppression (0.2)
         )
         config.dmn_suppression["redirect_breath"] = ContextualEffect(
-            base_value=EffectMagnitude.STRONG  # Strong suppression (0.3)
+            base_value=EffectMagnitude.MODERATE  # Moderate suppression (0.2)
         )
         
         # DAN boosts and suppressions
@@ -263,10 +263,10 @@ class TransitionThresholds:
     @classmethod
     def expert(cls) -> 'TransitionThresholds':
         return cls(
-            mind_wandering=0.7,
-            dmn_dan_ratio=0.6,
+            mind_wandering=0.75,
+            dmn_dan_ratio=0.65,
             meta_awareness=0.3,
-            return_focus=0.25
+            return_focus=0.35
         )
 
 @dataclass
@@ -409,25 +409,25 @@ NETWORK_PROFILES = {
         # BREATH CONTROL: Experts have lower DMN, higher DAN/FPN
         "breath_control": {
             "novice": NetworkProfile(DMN=0.35, VAN=0.4, DAN=0.7, FPN=0.5).__dict__,
-            "expert": NetworkProfile(DMN=0.2, VAN=0.4, DAN=0.85, FPN=0.7).__dict__
+            "expert": NetworkProfile(DMN=0.24, VAN=0.42, DAN=0.82, FPN=0.75).__dict__
         },
         
         # MIND WANDERING: Experts have much lower DMN, higher FPN control
         "mind_wandering": {
             "novice": NetworkProfile(DMN=0.85, VAN=0.45, DAN=0.2, FPN=0.35).__dict__,
-            "expert": NetworkProfile(DMN=0.65, VAN=0.5, DAN=0.35, FPN=0.55).__dict__
+            "expert": NetworkProfile(DMN=0.55, VAN=0.55, DAN=0.4, FPN=0.6).__dict__
         },
         
         # META-AWARENESS: Experts have higher VAN (detection) and FPN (control)
         "meta_awareness": {
             "novice": NetworkProfile(DMN=0.35, VAN=0.7, DAN=0.5, FPN=0.45).__dict__,
-            "expert": NetworkProfile(DMN=0.3, VAN=0.8, DAN=0.6, FPN=0.6).__dict__
+            "expert": NetworkProfile(DMN=0.32, VAN=0.85, DAN=0.58, FPN=0.65).__dict__
         },
         
         # REDIRECT BREATH: Experts have lower DMN, higher DAN/FPN (control)
         "redirect_breath": {
             "novice": NetworkProfile(DMN=0.3, VAN=0.45, DAN=0.65, FPN=0.55).__dict__,
-            "expert": NetworkProfile(DMN=0.15, VAN=0.5, DAN=0.8, FPN=0.7).__dict__
+            "expert": NetworkProfile(DMN=0.18, VAN=0.55, DAN=0.82, FPN=0.75).__dict__
         }
     }
 }
@@ -472,14 +472,14 @@ class ThoughtseedParams:
     META_AWARENESS_MODULATORS = {
         "breath_control": {
             "breath_focus": 0.1,
-            "equanimity": 0.2,
+            "equanimity": 0.25,
             "pain_discomfort": 0.0,
             "pending_tasks": 0.0,
             "self_reflection": 0.1
         },
         "mind_wandering": {
             "breath_focus": 0.0,
-            "equanimity": 0.0,
+            "equanimity": -0.05,
             "pain_discomfort": -0.1,
             "pending_tasks": -0.1,
             "self_reflection": 0.3
@@ -493,7 +493,7 @@ class ThoughtseedParams:
         },
         "redirect_breath": {
             "breath_focus": 0.2,
-            "equanimity": 0.2,
+            "equanimity": 0.25,
             "pain_discomfort": -0.1,
             "pending_tasks": 0.0,
             "self_reflection": 0.1
@@ -504,28 +504,28 @@ class ThoughtseedParams:
     EXPERT_ADJUSTMENTS = {
         "breath_control": {
             "breath_focus": 0.1,
-            "equanimity": 0.15,
+            "equanimity": 0.2,
             "pain_discomfort": 0.0,
             "pending_tasks": 0.0,
             "self_reflection": 0.0
         },
         "mind_wandering": {
             "breath_focus": 0.0,
-            "equanimity": 0.0,
+            "equanimity": 0.05,
             "pain_discomfort": -0.1,  
-            "pending_tasks": -0.25,   
+            "pending_tasks": -0.3,   
             "self_reflection": 0.0
         },
         "meta_awareness": {
             "breath_focus": 0.0,
-            "equanimity": 0.0,
+            "equanimity": 0.1,
             "pain_discomfort": 0.0,
             "pending_tasks": 0.0,
             "self_reflection": 0.1
         },
         "redirect_breath": {
             "breath_focus": 0.0,
-            "equanimity": 0.0,
+            "equanimity": 0.2,
             "pain_discomfort": 0.0,
             "pending_tasks": 0.0,
             "self_reflection": 0.0
@@ -565,7 +565,7 @@ class MetacognitionParams:
     # How thoughtseeds influence meta-awareness
     THOUGHTSEED_INFLUENCES = {
         "self_reflection": 0.2,  # Self-reflection strongly enhances meta-awareness
-        "equanimity": 0.15       # Equanimity moderately enhances meta-awareness
+        "equanimity": 0.2        # Equanimity provides a stronger regulation boost for experts
     }
     
     # Experience level adjustments

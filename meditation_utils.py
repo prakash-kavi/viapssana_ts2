@@ -5,20 +5,29 @@ Utility functions for the Vipassana Entropy meditation simulation.
 """
 
 import os
+import logging
 import numpy as np
 import json
 from meditation_config import THOUGHTSEED_AGENTS
 
-def ensure_directories(base_dir='./results_act_inf'):
-    """Create necessary directories for output files"""
-    os.makedirs(f'{base_dir}/data', exist_ok=True)
-    os.makedirs(f'{base_dir}/plots', exist_ok=True)
-    print(f"Directories created/verified for {base_dir} output files")
-    
-def _save_json_outputs(learner, output_dir='./results_act_inf/data/'):
+def ensure_directories(base_dir=None):
+    """Create iwai/data and iwai/plots by default (package-relative when base_dir is None)."""
+    if not base_dir:
+        base_dir = os.path.dirname(__file__)
+        
+    base_dir = os.fspath(base_dir)
+    data_dir = os.path.join(base_dir, "data")
+    plots_dir = os.path.join(base_dir, "plots")
+    os.makedirs(data_dir, exist_ok=True)
+    os.makedirs(plots_dir, exist_ok=True)
+    logging.info("Directories created/verified: data -> %s, plots -> %s", data_dir, plots_dir)
+
+def _save_json_outputs(learner, output_dir=None):
     """Save JSON outputs"""
-    print("\nGenerating consumer-ready JSON files...")
-    
+    if output_dir is None:
+        output_dir = os.path.join(os.path.dirname(__file__), "data")
+    logging.info("Generating consumer-ready JSON files...")
+
     # Helper function to convert numpy arrays to lists
     def convert_numpy_to_lists(obj):
         if isinstance(obj, np.ndarray):
@@ -57,7 +66,8 @@ def _save_json_outputs(learner, output_dir='./results_act_inf/data/'):
                     for j, s in enumerate(learner.state_history) if s == state
                 ])) for net in learner.networks
             } for state in learner.states if any(s == state for s in learner.state_history)
-        }
+        },
+        "learned_network_profiles": convert_numpy_to_lists(learner.learned_network_profiles)
     }
     
     # Add time series data (converting NumPy arrays to lists)
@@ -71,7 +81,8 @@ def _save_json_outputs(learner, output_dir='./results_act_inf/data/'):
 
     }
     
-    with open(f"./results_act_inf/data/thoughtseed_params_{learner.experience_level}.json", "w") as f:
+    out_path_ts = os.path.join(output_dir, f"thoughtseed_params_{learner.experience_level}.json")
+    with open(out_path_ts, "w", encoding="utf-8") as f:
         json.dump(thoughtseed_params, f, indent=2)
     
     # 2. Active Inference parameters
@@ -100,7 +111,8 @@ def _save_json_outputs(learner, output_dir='./results_act_inf/data/'):
         "network_expectations": learner.learned_network_profiles["state_network_expectations"]
     }
     
-    with open(f"./results_act_inf/data/active_inference_params_{learner.experience_level}.json", "w") as f:
+    out_path_ai = os.path.join(output_dir, f"active_inference_params_{learner.experience_level}.json")
+    with open(out_path_ai, "w", encoding="utf-8") as f:
         json.dump(active_inf_params, f, indent=2)
-    
-    print(f"  - JSON parameter files saved to ./results_act_inf/data/ directory")
+
+    logging.info("  - JSON parameter files saved to %s directory", output_dir)
