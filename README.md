@@ -5,10 +5,12 @@ This repository contains the reference implementation of the **Thoughtseeds Fram
 ## Conceptual Framework
 
 ![Figure 1](Mediative_cycle.jpg)
+
 **Figure 1. The four canonical stages of Focussed Attention meditation**
 Breath Focus, Mind Wandering, Meta-Awareness, and Redirect Attention.
 
 ![Figure 2](Thoughtseeds%20Framework.jpg)
+
 **Figure 2. Thoughtseeds Framework**
 Three-level hierarchical organization of thoughtseeds framework, rooted in Active Inference and Global Workspace Theory (GWT).
 
