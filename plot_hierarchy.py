@@ -144,5 +144,5 @@ if __name__ == "__main__":
     exp_tail = get_tail_stats(exp_stats)
     
     # Generate Panels
-    plot_hierarchy(nov_tail, save_path=os.path.join(PLOT_DIR, "Fig5A_Hierarchy_Novice.png"), title="Novice Profile")
-    plot_hierarchy(exp_tail, save_path=os.path.join(PLOT_DIR, "Fig5B_Hierarchy_Expert.png"), title="Expert Profile")
+    plot_hierarchy(nov_tail, save_path=os.path.join(PLOT_DIR, "Fig4A_Hierarchy_Novice.png"), title="Novice Profile")
+    plot_hierarchy(exp_tail, save_path=os.path.join(PLOT_DIR, "Fig4B_Hierarchy_Expert.png"), title="Expert Profile")

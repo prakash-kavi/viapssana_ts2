@@ -282,13 +282,13 @@ def generate_plots(tail: int | None = 200) -> None:
     # Fig 6A: 2D Attractor
     plot_attractor_2d(
         novice, expert, 
-        save_path=Path(pu.PLOT_DIR) / "Fig6A_Attractor2D.png"
+        save_path=Path(pu.PLOT_DIR) / "Fig5A_Attractor2D.png"
     )
     
     # Fig 6B: 3D Landscape
     plot_attractor_landscape_3d(
         novice, expert, 
-        save_path=Path(pu.PLOT_DIR) / "Fig6B_Attractor3D.png"
+        save_path=Path(pu.PLOT_DIR) / "Fig5B_Attractor3D.png"
     )
     logging.info("Saved attractor plots to %s", pu.PLOT_DIR)
 

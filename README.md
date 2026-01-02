@@ -32,13 +32,10 @@ The figures in the manuscript can be reproduced using the following scripts:
 
 | Figure | Description | Script | Output |
 | :--- | :--- | :--- | :--- |
-| **Figure 1** | Heterarchical Ensembles (Conceptual) | `python plot_heterarchy.py` | `plots/Fig1_Heterarchy.jpeg` |
-| **Figure 3** | Reference Profile Diagnostics (Tail Window) | `python plot_diagnostics.py` | `plots/Fig4_*.png` |
-| **Figure S1** | Convergence Diagnostics (Supplementary) | `python plot_convergence.py` | `plots/FigS1_Convergence_*.png` |
-| **Figure 5** | Hierarchical Dynamics Snapshots | `python plot_hierarchy.py` | `plots/Fig5_Hierarchy_*.png` |
-| **Figure 6** | Attractor Landscapes | `python plot_attractors.py` | `plots/Fig6_Attractor*.png` |
-
-*Note: Figure 4 in the codebase corresponds to the Reference Profile Diagnostics in the manuscript.*
+| **Figure 3** | Reference Profile Diagnostics (Tail Window) | `python plot_diagnostics.py` | `plots/Fig3_*.png` |
+| **Figure 4** | Hierarchical Dynamics Snapshots | `python plot_hierarchy.py` | `plots/Fig4_*.png` |
+| **Figure 5** | Attractor Landscapes | `python plot_attractors.py` | `plots/Fig5_*.png` |
+| **Figure S1** | Convergence Diagnostics (Supplementary) | `python plot_convergence.py` | `plots/FigS1_*.png` |
 
 ## Data Files
 

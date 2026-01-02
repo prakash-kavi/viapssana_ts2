@@ -280,8 +280,8 @@ if __name__ == "__main__":
     exp_tail = get_tail_stats(exp_stats)
     
     # Generate Panels
-    plot_time_series(nov_tail, exp_tail, os.path.join(PLOT_DIR, "Fig4A_TimeSeries.png"))
-    plot_free_energy_bar(nov_tail, exp_tail, os.path.join(PLOT_DIR, "Fig4B_FreeEnergy.png"))
+    plot_time_series(nov_tail, exp_tail, os.path.join(PLOT_DIR, "FigS1C_TimeSeries.png"))
+    plot_free_energy_bar(nov_tail, exp_tail, os.path.join(PLOT_DIR, "Fig3A_FreeEnergy.png"))
     # Note: Radar needs network expectations, usually in ai_data for this model
-    plot_network_radar(nov_ai, exp_ai, os.path.join(PLOT_DIR, "Fig4C_Radar.png"))
-    plot_dwell_times(nov_tail, exp_tail, os.path.join(PLOT_DIR, "Fig4D_DwellTime.png"))
+    plot_network_radar(nov_ai, exp_ai, os.path.join(PLOT_DIR, "Fig3B_Radar.png"))
+    plot_dwell_times(nov_tail, exp_tail, os.path.join(PLOT_DIR, "Fig3C_DwellTime.png"))
