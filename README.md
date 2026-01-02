@@ -4,7 +4,7 @@ This repository contains the reference implementation of the **Thoughtseeds Fram
 
 ## Conceptual Framework
 
-![Figure 1](fig1.jpeg)
+![Figure 1](Mediative_cycle.jpg)
 **Figure 1. The four canonical stages of Focussed Attention meditation**
 Breath Focus, Mind Wandering, Meta-Awareness, and Redirect Attention.
 
