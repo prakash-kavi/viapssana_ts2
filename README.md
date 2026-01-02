@@ -1,6 +1,6 @@
 # Vipassana-TS2: Thoughtseeds Framework Implementation
 
-This repository contains the reference implementation of the **Thoughtseeds Framework** for modeling Vipassana meditation dynamics using Active Inference.
+This repository contains the reference implementation of the **Thoughtseeds Framework** for modeling Vipassana meditation dynamics. While rooted in the principles of Active Inference, this implementation utilizes a structured **rules-based learning foundation** rather than a fully self-organizing probabilistic formulation. Our primary objective is to demonstrate the architectural utility of the "Thoughtseeds" framework as a scaffold for future development. It aims to progressively incorporate the full hierarchy of Active Inference—from generative-model formulation to multi-agent interactions—thereby linking subjective phenomenology with measurable neural dynamics as future implementations. The three-level hierarchical structure (attentional networks → thoughtseeds → meta-cognition) captures the nested organization of the meditative mind, replicating complex expert–novice phenomenological differences.
 
 ## Project Structure
 
