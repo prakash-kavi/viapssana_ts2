@@ -95,6 +95,8 @@ class ActiveInferenceParameters:
     noise_level: float
     memory_factor: float
     fpn_enhancement: float
+    fpn_reflection_value: float
+    fpn_equanimity_value: float
     distraction_pressure: float
     fatigue_rate: float
     softmax_temperature: float
@@ -110,6 +112,8 @@ class ActiveInferenceParameters:
             noise_level=0.04,
             memory_factor=0.85, 
             fpn_enhancement=1.0,
+            fpn_reflection_value=0.15,
+            fpn_equanimity_value=0.2,
             distraction_pressure=1.30,
             fatigue_rate=0.30,
             softmax_temperature=2.5,
@@ -126,6 +130,8 @@ class ActiveInferenceParameters:
             noise_level=0.03,  
             memory_factor=0.75,  
             fpn_enhancement=1.1, 
+            fpn_reflection_value=0.2,
+            fpn_equanimity_value=0.25,
             distraction_pressure=0.62,
             fatigue_rate=0.15,         
             softmax_temperature=2.0,   
@@ -142,6 +148,8 @@ class ActiveInferenceParameters:
             'noise_level': self.noise_level,
             'memory_factor': self.memory_factor,
             'fpn_enhancement': self.fpn_enhancement,
+            'fpn_reflection_value': self.fpn_reflection_value,
+            'fpn_equanimity_value': self.fpn_equanimity_value,
             'distraction_pressure': self.distraction_pressure,
             'fatigue_rate': self.fatigue_rate,
             'softmax_temperature': self.softmax_temperature,
@@ -214,10 +222,6 @@ DEFAULTS.update({
     'DAN_BREATH_VALUE': 0.2,
     'DAN_PENDING_VALUE': 0.15,
     'DAN_PAIN_VALUE': 0.1,
-    'FPN_REFLECTION_EXPERT': 0.2,
-    'FPN_REFLECTION_NOVICE': 0.15,
-    'FPN_EQUANIMITY_EXPERT': 0.25,
-    'FPN_EQUANIMITY_NOVICE': 0.2,
     'BASE_THETA_NOVICE': 0.2,
     'BASE_THETA_EXPERT': 0.25,
     'BASE_SIGMA_NOVICE': 0.05,

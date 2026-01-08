@@ -129,6 +129,8 @@ class ActInfAgent(AgentConfig):
         self.noise_level = aif_params['noise_level']
         self.memory_factor = aif_params['memory_factor']
         self.fpn_enhancement = aif_params['fpn_enhancement']
+        self.fpn_reflection_value = aif_params.get('fpn_reflection_value', 0.15)
+        self.fpn_equanimity_value = aif_params.get('fpn_equanimity_value', 0.2)
         self.transition_thresholds = aif_params['transition_thresholds']
         self.distraction_pressure = aif_params['distraction_pressure']
         self.fatigue_rate = aif_params['fatigue_rate']
@@ -380,11 +382,8 @@ class ActInfAgent(AgentConfig):
         fpn_strength = network_acts.get('FPN', 0)
         fpn_enhancement = self.fpn_enhancement
 
-        fpn_reflection_value = DEFAULTS.get('FPN_REFLECTION_EXPERT', 0.2) if self.experience_level == 'expert' else DEFAULTS.get('FPN_REFLECTION_NOVICE', 0.15)
-        fpn_equanimity_value = DEFAULTS.get('FPN_EQUANIMITY_EXPERT', 0.25) if self.experience_level == 'expert' else DEFAULTS.get('FPN_EQUANIMITY_NOVICE', 0.2)
-
-        modulations['self_reflection'] += fpn_reflection_value * fpn_strength * fpn_enhancement
-        modulations['equanimity'] += fpn_equanimity_value * fpn_strength * fpn_enhancement
+        modulations['self_reflection'] += self.fpn_reflection_value * fpn_strength * fpn_enhancement
+        modulations['equanimity'] += self.fpn_equanimity_value * fpn_strength * fpn_enhancement
                 
         return modulations
 
