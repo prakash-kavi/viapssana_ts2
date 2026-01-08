@@ -1,9 +1,4 @@
-"""
-run_simulation.py
-
-Main entry point for running the meditation simulation.
-This script initializes and trains the Active Inference models for both novice and expert cohorts.
-"""
+"""run_simulation.py — initialize and train novice/expert models"""
 
 import logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -14,16 +9,12 @@ from meditation_trainer import Trainer
 from meditation_config import DEFAULTS
 
 def run_simulation():
-    # Set random seed for reproducibility (configurable)
     seed = 42
-
-    T = 1000  # Total timesteps for training
+    T = 1000
     out_dir = None
-    
+
     logging.info("Starting simulation...")
     ensure_directories()
-    
-    # Create and train active inference learners
     logging.info("--- Training Novice Model ---")
     learner_novice = ActInfAgent(experience_level='novice', timesteps_per_cycle=T)
     Trainer(learner_novice).train(save_outputs=True, output_dir=out_dir, seed=seed)

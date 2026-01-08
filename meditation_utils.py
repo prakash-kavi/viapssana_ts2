@@ -9,12 +9,20 @@ import logging
 import numpy as np
 import json
 
-def ou_update(x_prev, mu, theta, sigma, dt=1.0):
-    """Ornstein-Uhlenbeck update helper (vectorized).
+def clip_array(x, vmin, vmax):
+    """Clip a scalar or NumPy array to [vmin, vmax] and return same type.
 
-    x_prev, mu can be scalars or array-like. Returns x_new = x_prev +
-    theta*(mu - x_prev)*dt + sigma*noise where noise ~ N(0,1).
+    Keeps scalars as scalars and arrays as NumPy arrays.
     """
+    arr = np.asarray(x)
+    clipped = np.clip(arr, vmin, vmax)
+    # Return scalar if input was scalar
+    if clipped.shape == ():
+        return float(clipped)
+    return clipped
+
+def ou_update(x_prev, mu, theta, sigma, dt=1.0):
+    # Ornstein-Uhlenbeck update: mean reversion + Gaussian noise
     x_prev_arr = np.asarray(x_prev)
     mu_arr = np.asarray(mu)
 
@@ -24,7 +32,7 @@ def ou_update(x_prev, mu, theta, sigma, dt=1.0):
     return x_prev_arr + dx
 
 def ensure_directories(base_dir=None):
-    """Create data and plots directories by default (package-relative when base_dir is None)."""
+    # Ensure `data/` and `plots/` exist under base_dir (or package root)
     # Default to project root (module's containing directory)
     if not base_dir:
         base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -37,7 +45,7 @@ def ensure_directories(base_dir=None):
     logging.info("Directories created/verified: data/, plots/")
 
 def _save_json_outputs(learner, output_dir=None):
-    """Save JSON outputs. Provides guards for empty histories and allows configurable output directory."""
+    # Serialize learner parameters and time series into JSON files
     if output_dir is None:
         output_dir = os.path.join(os.path.dirname(__file__), "data")
     os.makedirs(output_dir, exist_ok=True)
@@ -106,11 +114,7 @@ def _save_json_outputs(learner, output_dir=None):
     logging.info("  - JSON parameter files saved to %s directory", output_dir)
 
 def to_json_serializable(obj):
-    """Recursively convert numpy arrays to lists and leave other objects JSON-serializable.
-
-    This is a utility used across plotting and save routines to ensure outputs
-    are consumer-ready JSON structures.
-    """
+    # Convert numpy arrays/dicts/lists into JSON-serializable structures
     if isinstance(obj, np.ndarray):
         return obj.tolist()
     if isinstance(obj, dict):
@@ -121,16 +125,7 @@ def to_json_serializable(obj):
     return obj
 
 def compute_state_aggregates(learner):
-    """Compute per-state aggregates (means) from a learner's run histories.
-
-    Returns a dictionary with keys:
-      - activation_means_by_state
-      - average_network_activations_by_state
-      - average_free_energy_by_state
-      - average_prediction_error_by_state
-      - average_precision_by_state
-      - average_activations_at_transition
-    """
+        # Compute per-state means for activations, networks, VFE and errors
     aggregates = {}
     states = learner.states
     # Activation means per state (thoughtseed activations)

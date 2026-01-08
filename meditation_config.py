@@ -14,7 +14,6 @@ STATES = ['breath_control', 'mind_wandering', 'meta_awareness', 'redirect_breath
 
 @dataclass
 class DwellTimeConfig:
-    """State dwell time configuration"""
     breath_control: Tuple[int, int]
     mind_wandering: Tuple[int, int]
     meta_awareness: Tuple[int, int]
@@ -40,7 +39,6 @@ class DwellTimeConfig:
 
 @dataclass
 class NetworkProfile:
-    """Network profiles for thoughtseeds and states"""
     DMN: float
     VAN: float
     DAN: float
@@ -48,7 +46,6 @@ class NetworkProfile:
     
 @dataclass
 class TransitionThresholds:
-    """Thresholds for state transitions"""
     mind_wandering: float  # Distraction level threshold
     dmn_dan_ratio: float   # DMN/DAN ratio threshold
     meta_awareness: float  # Self-reflection threshold for meta-awareness
@@ -74,7 +71,6 @@ class TransitionThresholds:
 
 @dataclass
 class StateTargetActivations:
-    """Target activations for each thoughtseed in a particular state"""
     breath_focus: float
     equanimity: float
     pain_discomfort: float
@@ -93,7 +89,6 @@ class StateTargetActivations:
 
 @dataclass
 class ActiveInferenceParameters:
-    """Core active inference parameters"""
     precision_weight: float
     complexity_penalty: float
     learning_rate: float
@@ -206,8 +201,27 @@ DEFAULTS.update({
     'TRANSITION_COUNTER_RAND': 2,
     'VFE_ACCUM_DECAY': 0.9,
     'VFE_ACCUM_ALPHA': 0.1,
-    'DISTRACTION_PRESSURE_NOVICE': 0.4,
-    'DISTRACTION_PRESSURE_EXPERT': 0.15
+    'DISTRACTION_PRESSURE': 0.4
+})
+
+# Additional surface/modulation defaults (moved from hard-coded locations)
+DEFAULTS.update({
+    'DMN_PENDING_VALUE': 0.15,
+    'DMN_REFLECTION_VALUE': 0.05,
+    'DMN_BREATH_VALUE': 0.2,
+    'VAN_PAIN_VALUE': 0.15,
+    'VAN_REFLECTION_VALUE': 0.2,
+    'DAN_BREATH_VALUE': 0.2,
+    'DAN_PENDING_VALUE': 0.15,
+    'DAN_PAIN_VALUE': 0.1,
+    'FPN_REFLECTION_EXPERT': 0.2,
+    'FPN_REFLECTION_NOVICE': 0.15,
+    'FPN_EQUANIMITY_EXPERT': 0.25,
+    'FPN_EQUANIMITY_NOVICE': 0.2,
+    'BASE_THETA_NOVICE': 0.2,
+    'BASE_THETA_EXPERT': 0.25,
+    'BASE_SIGMA_NOVICE': 0.05,
+    'BASE_SIGMA_EXPERT': 0.035,
 })
 # Network profiles for thoughtseeds and states
 NETWORK_PROFILES = {
@@ -249,7 +263,6 @@ NETWORK_PROFILES = {
 
 @dataclass
 class ThoughtseedParams:
-    """Thoughtseed target activation parameters derived from meditation literature."""
     
     # Base target activation patterns for each thoughtseed in each state
     BASE_ACTIVATIONS = {
@@ -367,7 +380,6 @@ class ThoughtseedParams:
 
 @dataclass
 class MetacognitionParams:
-    """Meta-awareness parameters assumptions based on empirical studies of meditation."""
     
     # Base meta-awareness levels for each state
     BASE_AWARENESS = {

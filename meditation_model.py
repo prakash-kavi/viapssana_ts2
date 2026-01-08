@@ -18,7 +18,7 @@ from meditation_config import (
     ActiveInferenceConfig, ThoughtseedParams, MetacognitionParams,
     NETWORK_PROFILES, DEFAULTS
 )
-from meditation_utils import ensure_directories, _save_json_outputs, ou_update
+from meditation_utils import ensure_directories, _save_json_outputs, ou_update, clip_array
 
 class AgentConfig:
     """
@@ -63,7 +63,7 @@ class AgentConfig:
         self.prev_network_acts = None
 
     def get_target_activations(self, state, meta_awareness):
-        """Generate target activations based on state and meta-awareness."""
+        # Return target activations for `state` (modulated by `meta_awareness`)
         targets_dict = ThoughtseedParams.get_target_activations(
             state, meta_awareness, self.experience_level)
         
@@ -76,7 +76,7 @@ class AgentConfig:
         return np.clip(target_activations, 0.05, 1.0)
 
     def get_dwell_time(self, state):
-        """Generate random dwell time based on experience level."""
+        # Random dwell time bounded by STATE_DWELL_TIMES and minimal biological plausibility
         config_min, config_max = STATE_DWELL_TIMES[self.experience_level][state]
         
         # Ensure minimal biological plausibility
@@ -90,7 +90,7 @@ class AgentConfig:
         return max(min_biological, min(max_biological, np.random.randint(config_min, config_max + 1)))
 
     def get_meta_awareness(self, current_state, activations):
-        """Calculate meta-awareness based on state and thoughtseed activations."""
+        # Compute meta-awareness from thoughtseed activations and state
         activations_dict = {ts: activations[i] for i, ts in enumerate(self.thoughtseeds)}
         
         return MetacognitionParams.calculate_meta_awareness(
@@ -156,12 +156,7 @@ class ActInfAgent(AgentConfig):
             self.learned_network_profiles["state_network_expectations"][state] = NETWORK_PROFILES["state_expected_profiles"][state][self.experience_level].copy()
             
     def compute_network_activations(self, thoughtseed_activations, current_state, meta_awareness, dt=1.0):
-        """
-        Compute network activations using physics-based coupled dynamics.
-        1. Base Targets (Bottom-up + Top-down)
-        2. Coupled Dynamics (FPN->DAN, Mutual Inhibition, VAN Trigger)
-        3. Ornstein-Uhlenbeck Process (Smoothing & Stability)
-        """
+        # Compute attentional network activations from thoughtseed activations and state
         # Get thoughtseed-to-network contribution matrix
         ts_to_network = self.learned_network_profiles["thoughtseed_contributions"]
         
@@ -213,14 +208,13 @@ class ActInfAgent(AgentConfig):
             target_acts['DAN'] -= anticorrelation_force * self.prev_network_acts['DMN'] * target_acts['DAN']
             target_acts['DMN'] -= anticorrelation_force * self.prev_network_acts['DAN'] * target_acts['DMN']
         
-        # C. VAN Leaky Integrator (The Detector)
+        # VAN Leaky Integrator (The Detector)
         if self.prev_network_acts:
             current_dmn = self.prev_network_acts['DMN']
             self.dmn_accumulator = 0.9 * self.dmn_accumulator + 0.1 * current_dmn
             
             # Fire if threshold crossed (Refractory period via reset)
-            van_trigger_threshold = 0.7
-            if self.dmn_accumulator > van_trigger_threshold:
+            if self.dmn_accumulator > DEFAULTS.get('VAN_TRIGGER', 0.7):
                 target_acts['VAN'] += DEFAULTS['VAN_SPIKE']  # Salience spike
                 self.dmn_accumulator = 0.0 # Reset
 
@@ -255,8 +249,10 @@ class ActInfAgent(AgentConfig):
             current_acts = target_acts
             
         # Normalize
+        from meditation_utils import clip_array
+
         for net in self.networks:
-            current_acts[net] = np.clip(current_acts[net], DEFAULTS['NETWORK_CLIP_MIN'], DEFAULTS['NETWORK_CLIP_MAX'])
+            current_acts[net] = float(clip_array(current_acts[net], DEFAULTS['NETWORK_CLIP_MIN'], DEFAULTS['NETWORK_CLIP_MAX']))
 
         # VAN values > neurophysiological cap
         max_van = DEFAULTS['VAN_MAX']
@@ -266,10 +262,7 @@ class ActInfAgent(AgentConfig):
         return current_acts
     
     def get_sensory_inference(self, network_acts):
-        """
-        Infer bottom-up thoughtseed state from network activations.
-        Uses the learned Generative Model (A-matrix) to invert observations.
-        """
+        # Infer thoughtseed beliefs from network activations using learned profiles
         ts_contribs = self.learned_network_profiles["thoughtseed_contributions"]
         inferred = np.zeros(self.num_thoughtseeds)
         
@@ -290,13 +283,10 @@ class ActInfAgent(AgentConfig):
             else: # pragma: no cover
                 inferred[i] = 0.1
                 
-        return np.clip(inferred, 0.01, 0.99)
+        return clip_array(inferred, DEFAULTS['ACTIVATION_CLIP_MIN'], DEFAULTS['ACTIVATION_CLIP_MAX'])
 
     def calculate_vfe(self, current_seeds, prior_seeds, sensory_inference, meta_awareness, vfe_trend=0.0):
-        """
-        Calculate Variational Free Energy using Negative Log Likelihoods.
-        F = (Accuracy * Sensory_Precision) + (Complexity * Prior_Precision)
-        """
+        # Compute variational free energy and components (sensory/prior NLL)
         # 1. Accuracy (Sensory NLL): Divergence between Beliefs and Reality
         # NLL(o|s) ~ KL(o||s)
         sensory_nll = np.sum(
@@ -327,10 +317,7 @@ class ActInfAgent(AgentConfig):
         return vfe, sensory_nll, prior_nll
    
     def update_network_profiles(self, thoughtseed_activations, network_activations, current_state, prediction_errors):
-        """
-        Update learned network profiles (Eq 3).
-        W_ik ← (1-ρ)W_ik + η δ_k(t)z_i(t)
-        """
+        # Update learned mapping from thoughtseeds -> networks using prediction errors
         # Only update after some initial observations
         if len(self.network_activations_history) < 10:
             return
@@ -364,60 +351,81 @@ class ActInfAgent(AgentConfig):
             self.learned_network_profiles["state_network_expectations"][current_state][net] = new_value
     
     def get_network_modulation(self, network_acts, current_state):
-        """
-        Calculate modulation of thoughtseed targets based on network activity.
-        Returns a dictionary of adjustments to be added to the base targets.
-        """
+        # Compute adjustments to thoughtseed targets driven by network activity
         modulations = {ts: 0.0 for ts in self.thoughtseeds}
         
         # DMN enhances pending_tasks and self_reflection, suppresses breath_focus
         dmn_strength = network_acts.get('DMN', 0)
-        
-        dmn_pending_value = 0.15
-        dmn_reflection_value = 0.05 
-        dmn_breath_value = 0.2
-        
-        modulations['pending_tasks'] += dmn_pending_value * dmn_strength
-        modulations['self_reflection'] += dmn_reflection_value * dmn_strength
-        modulations['breath_focus'] -= dmn_breath_value * dmn_strength
+
+        modulations['pending_tasks'] += DEFAULTS.get('DMN_PENDING_VALUE', 0.15) * dmn_strength
+        modulations['self_reflection'] += DEFAULTS.get('DMN_REFLECTION_VALUE', 0.05) * dmn_strength
+        modulations['breath_focus'] -= DEFAULTS.get('DMN_BREATH_VALUE', 0.2) * dmn_strength
 
         # VAN enhances pain_discomfort (salience) and self_reflection during meta_awareness
         van_strength = network_acts.get('VAN', 0)
-        
-        van_pain_value = 0.15
-        modulations['pain_discomfort'] += van_pain_value * van_strength
-        
+
+        modulations['pain_discomfort'] += DEFAULTS.get('VAN_PAIN_VALUE', 0.15) * van_strength
+
         if current_state == "meta_awareness":
-            van_reflection_value = 0.2
-            modulations['self_reflection'] += van_reflection_value * van_strength
+            modulations['self_reflection'] += DEFAULTS.get('VAN_REFLECTION_VALUE', 0.2) * van_strength
 
         # DAN enhances breath_focus, suppresses distractions
         dan_strength = network_acts.get('DAN', 0)
-        
-        dan_breath_value = 0.2
-        dan_pending_value = 0.15
-        dan_pain_value = 0.1
-        
-        modulations['breath_focus'] += dan_breath_value * dan_strength
-        modulations['pending_tasks'] -= dan_pending_value * dan_strength
-        modulations['pain_discomfort'] -= dan_pain_value * dan_strength
+
+        modulations['breath_focus'] += DEFAULTS.get('DAN_BREATH_VALUE', 0.2) * dan_strength
+        modulations['pending_tasks'] -= DEFAULTS.get('DAN_PENDING_VALUE', 0.15) * dan_strength
+        modulations['pain_discomfort'] -= DEFAULTS.get('DAN_PAIN_VALUE', 0.1) * dan_strength
         
         # FPN enhances self_reflection and equanimity (metacognition and regulation)
         fpn_strength = network_acts.get('FPN', 0)
         fpn_enhancement = self.fpn_enhancement
-        
-        fpn_reflection_value = 0.2 if self.experience_level == 'expert' else 0.15
-        fpn_equanimity_value = 0.25 if self.experience_level == 'expert' else 0.2
-        
+
+        fpn_reflection_value = DEFAULTS.get('FPN_REFLECTION_EXPERT', 0.2) if self.experience_level == 'expert' else DEFAULTS.get('FPN_REFLECTION_NOVICE', 0.15)
+        fpn_equanimity_value = DEFAULTS.get('FPN_EQUANIMITY_EXPERT', 0.25) if self.experience_level == 'expert' else DEFAULTS.get('FPN_EQUANIMITY_NOVICE', 0.2)
+
         modulations['self_reflection'] += fpn_reflection_value * fpn_strength * fpn_enhancement
         modulations['equanimity'] += fpn_equanimity_value * fpn_strength * fpn_enhancement
                 
         return modulations
 
+    def get_transition_probabilities(self, activations, network_acts):
+                # Score and normalize possible next states by similarity to learned profiles
+        scores = {}
+        temp = max(1e-6, getattr(self, 'softmax_temperature', 0.5))
+
+        # Use previous meta-awareness as a proxy (fallback to 0.5)
+        meta = getattr(self, 'prev_meta_awareness', 0.5) if getattr(self, 'prev_meta_awareness', None) is not None else 0.5
+
+        for state in self.states:
+            # Network expectation similarity (negative L2 distance)
+            expect = self.learned_network_profiles["state_network_expectations"][state]
+            expect_vec = np.array([expect[net] for net in self.networks])
+            net_vec = np.array([network_acts.get(net, 0.0) for net in self.networks])
+            net_dist = np.linalg.norm(net_vec - expect_vec)
+            net_score = np.exp(-net_dist / (temp * 1.0))
+
+            # Activation similarity: compare to target activations for that state
+            try:
+                target_ts = self.get_target_activations(state, meta)
+                act_dist = np.linalg.norm(activations - target_ts)
+                act_score = np.exp(-act_dist / (temp * 1.0))
+            except Exception:
+                act_score = 1.0
+
+            # Combine scores (multiplicative fusion)
+            scores[state] = float(net_score * act_score)
+
+        # Normalize into probabilities (avoid division by zero)
+        total = sum(scores.values())
+        if total <= 0:
+            # Uniform over states as a safe fallback
+            n = len(self.states)
+            return {s: 1.0 / n for s in self.states}
+
+        return {s: v / total for s, v in scores.items()}
+
     def update_thoughtseed_dynamics(self, current_activations, target_activations, current_state, current_dwell, dwell_limit):
-        """
-        Update thoughtseed activations using Ornstein-Uhlenbeck process.
-        """
+        # Evolve thoughtseed activations toward targets using OU dynamics
         dt = DEFAULTS['DEFAULT_DT']
         updated_activations = current_activations.copy()
         
@@ -448,9 +456,9 @@ class ActInfAgent(AgentConfig):
 
         # 2. Set Stochastic Parameters (Ornstein-Uhlenbeck)
         # Theta (Reversion Speed)
-        base_theta = 0.2 if self.experience_level == 'novice' else 0.25
+        base_theta = DEFAULTS.get('BASE_THETA_NOVICE', 0.2) if self.experience_level == 'novice' else DEFAULTS.get('BASE_THETA_EXPERT', 0.25)
         # Sigma (Volatility)
-        base_sigma = 0.05 if self.experience_level == 'novice' else 0.035
+        base_sigma = DEFAULTS.get('BASE_SIGMA_NOVICE', 0.05) if self.experience_level == 'novice' else DEFAULTS.get('BASE_SIGMA_EXPERT', 0.035)
         
         # 3. Apply OU Update
         for i, ts in enumerate(self.thoughtseeds):
@@ -474,52 +482,6 @@ class ActInfAgent(AgentConfig):
             # Calculate update using OU helper
             updated_activations[i] = float(ou_update(x_prev, target, theta, sigma, dt))
             
-        return np.clip(updated_activations, DEFAULTS['ACTIVATION_CLIP_MIN'], DEFAULTS['ACTIVATION_CLIP_MAX'])
-    
-    def get_meta_awareness(self, current_state, activations):
-        """Calculate meta-awareness using the base implementation"""
-        return super().get_meta_awareness(current_state, activations)
-    
-    def get_dwell_time(self, state):
-        """Get state-specific dwell time based on experience level."""
-        # Use parent method 
-        return super().get_dwell_time(state)
-    
-    def get_transition_probabilities(self, activations, network_acts):
-        """
-        Calculate transition probabilities based on Expected Free Energy (G).
-        Approximated as the similarity between current Thoughtseed State (Affordances)
-        and the expected Thoughtseed Profile of each candidate state.
-        """
-        probs = {}
-        
-        # 1. Construct Current Observation Vector (Thoughtseeds Only)
-        obs_vector = activations
-        
-        # 2. Calculate Similarity to Each State's Profile
-        for state in self.states:
-            # Get Expected Thoughtseeds for this state
-            ts_targets = ThoughtseedParams.get_target_activations(state, 0.5, self.experience_level)
-            state_vector = np.array([ts_targets[ts] for ts in self.thoughtseeds])
-            
-            # Calculate Similarity (Dot Product)
-            # Higher match = Higher probability of transition
-            similarity = np.dot(obs_vector, state_vector)
-            
-            probs[state] = similarity
+        from meditation_utils import clip_array
+        return clip_array(updated_activations, DEFAULTS['ACTIVATION_CLIP_MIN'], DEFAULTS['ACTIVATION_CLIP_MAX'])
 
-        # 3. Apply Softmax
-        max_score = max(probs.values())
-        exp_scores = {k: np.exp((v - max_score) * self.softmax_temperature) for k, v in probs.items()}
-        total_exp = sum(exp_scores.values())
-        
-        return {k: v / total_exp for k, v in exp_scores.items()}
-
-    def train(self, save_outputs=True):
-        """Delegate training to the external Trainer to keep the agent focused on
-        dynamics and small learning steps. Returns the agent after training.
-        """
-        from meditation_trainer import Trainer
-
-        trainer = Trainer(self)
-        return trainer.train(save_outputs=save_outputs)

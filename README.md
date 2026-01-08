@@ -2,7 +2,7 @@
 
 This repository contains the reference implementation of the **Thoughtseeds Framework** for modeling Vipassana meditation dynamics.
 
-Important: this is a stochastic simulation using coupled Ornstein–Uhlenbeck dynamics under an Active Inference formulation. It is intended for computational exploration and does not substitute for empirical data.
+This is a stochastic simulation using coupled Ornstein–Uhlenbeck dynamics as an initial Active Inference formulation, serving as a scaffold for future full Active Inference implementations. It is a computational simulation and does not do emprical data fitting or neuromimaging data analysis.
 
 ## Conceptual Overview
 

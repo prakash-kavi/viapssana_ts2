@@ -102,9 +102,7 @@ class Trainer:
                 time_in_focused_state += 1
                 progress = min(1.5, current_dwell / max(10, dwell_limit))
                 # Prefer agent-provided distraction_pressure; fall back to DEFAULTS
-                distraction_pressure = getattr(agent, 'distraction_pressure', None)
-                if distraction_pressure is None:
-                    distraction_pressure = DEFAULTS['DISTRACTION_PRESSURE_NOVICE'] if agent.experience_level == 'novice' else DEFAULTS['DISTRACTION_PRESSURE_EXPERT']
+                distraction_pressure = getattr(agent, 'distraction_pressure', DEFAULTS.get('DISTRACTION_PRESSURE', 0.4))
                 agent.distraction_buildup_rates.append(distraction_pressure * progress)
             else:
                 time_in_focused_state = 0

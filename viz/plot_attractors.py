@@ -269,6 +269,8 @@ def plot_attractor_landscape_3d(
         ax.set_zticks([])
 
     cmap = plt.get_cmap("viridis")
+    # Normalization for mapping z-values to colors (used for adaptive label contrast)
+    norm = mpl.colors.Normalize(vmin=z_min, vmax=z_max)
     ax_left.plot_surface(grid_x, grid_y, nov_surface, cmap=cmap, vmin=z_min, vmax=z_max, linewidth=0, antialiased=True, alpha=0.65)
     ax_right.plot_surface(grid_x, grid_y, exp_surface, cmap=cmap, vmin=z_min, vmax=z_max, linewidth=0, antialiased=True, alpha=0.65)
 
@@ -295,17 +297,32 @@ def plot_attractor_landscape_3d(
             z_plot = min(0.98, z_val + 0.02)
 
             # Render text with a white stroke for contrast over the surface
+            # Choose text color adaptively for contrast against the surface
+            # Map z value to cmap color and compute perceived luminance
+            cmap_rgba = cmap(norm(z_val)) if 'cmap' in locals() else (0.0, 0.0, 0.0, 1.0)
+            # Perceived luminance approximation from sRGB
+            r, g, b = cmap_rgba[0], cmap_rgba[1], cmap_rgba[2]
+            luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+            # If surface under label is dark, use white text; otherwise use dark blue
+            if luminance < 0.5:
+                text_color = "#FFFFFF"
+            else:
+                text_color = "#003366"  # dark blue for good contrast
+
             txt = ax.text(
                 centre[0],
                 centre[1],
                 z_plot + 0.01,
                 STATE_SHORT.get(state, state),
-                color=STATE_COLORS.get(state, "#000000"),
+                color=text_color,
                 fontsize=11,
                 fontweight="bold",
+                ha="center",
+                va="center",
             )
             txt.set_path_effects([
-                patheffects.Stroke(linewidth=3, foreground="white"),
+                patheffects.Stroke(linewidth=3, foreground="#000000" if text_color=="#FFFFFF" else "white"),
                 patheffects.Normal()
             ])
         ax.set_title(title, fontsize=13, fontweight="bold")
