@@ -33,7 +33,6 @@ def ou_update(x_prev, mu, theta, sigma, dt=1.0):
 
 def ensure_directories(base_dir=None):
     # Ensure `data/` and `plots/` exist under base_dir (or package root)
-    # Default to project root (module's containing directory)
     if not base_dir:
         base_dir = os.path.dirname(os.path.abspath(__file__))
 

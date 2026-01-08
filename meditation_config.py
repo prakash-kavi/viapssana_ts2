@@ -88,7 +88,7 @@ class StateTargetActivations:
         }
 
 @dataclass
-class ActiveInferenceParameters:
+class ActInfParams:
     precision_weight: float
     complexity_penalty: float
     learning_rate: float
@@ -99,6 +99,25 @@ class ActiveInferenceParameters:
     fpn_equanimity_value: float
     distraction_pressure: float
     fatigue_rate: float
+    fpn_accum_decay: float
+    fpn_accum_inc: float
+    fatigue_reset: float
+    # FPN collapse / base demand tunables
+    fpn_collapse_dan_mult: float
+    fpn_collapse_dmn_inc: float
+    fpn_base_demand: float
+    fpn_focus_mult: float
+    # Per-agent smoothing/blending and transition noise
+    smoothing: float
+    blend_factor_transition: float
+    blend_factor_state: float
+    blend_variation: float
+    transition_perturb_std: float
+    transition_variation_low: float
+    transition_variation_high: float
+    # VFE accumulator dynamics
+    vfe_accum_decay: float
+    vfe_accum_alpha: float
     base_theta: float
     base_sigma: float
     softmax_temperature: float
@@ -106,7 +125,7 @@ class ActiveInferenceParameters:
     transition_thresholds: TransitionThresholds
     
     @classmethod
-    def novice(cls) -> 'ActiveInferenceParameters':
+    def novice(cls) -> 'ActInfParams':
         return cls(
             precision_weight=0.4,
             complexity_penalty=0.4,
@@ -118,15 +137,31 @@ class ActiveInferenceParameters:
             fpn_equanimity_value=0.2,
             distraction_pressure=1.30,
             fatigue_rate=0.30,
+            smoothing=0.6,
+            blend_factor_transition=0.3,
+            blend_factor_state=0.4,
+            blend_variation=0.1,
+            transition_perturb_std=0.02,
+            transition_variation_low=-0.05,
+            transition_variation_high=0.1,
+            vfe_accum_decay=0.9,
+            vfe_accum_alpha=0.1,
             base_theta=0.2,
             base_sigma=0.05,
+            fpn_accum_decay=0.98,
+            fpn_accum_inc=0.02,
+            fatigue_reset=0.4,
+            fpn_collapse_dan_mult=0.6,
+            fpn_collapse_dmn_inc=0.2,
+            fpn_base_demand=0.2,
+            fpn_focus_mult=2.0,
             softmax_temperature=2.5,
             fatigue_threshold=0.50,
             transition_thresholds=TransitionThresholds.novice()
         )
     
     @classmethod
-    def expert(cls) -> 'ActiveInferenceParameters':
+    def expert(cls) -> 'ActInfParams':
         return cls(
             precision_weight=0.5,
             complexity_penalty=0.2,
@@ -138,8 +173,24 @@ class ActiveInferenceParameters:
             fpn_equanimity_value=0.25,
             distraction_pressure=0.62,
             fatigue_rate=0.15,         
+            smoothing=0.8,
+            blend_factor_transition=0.3,
+            blend_factor_state=0.4,
+            blend_variation=0.1,
+            transition_perturb_std=0.02,
+            transition_variation_low=-0.05,
+            transition_variation_high=0.1,
+            vfe_accum_decay=0.9,
+            vfe_accum_alpha=0.1,
             base_theta=0.25,
             base_sigma=0.035,
+            fpn_accum_decay=0.98,
+            fpn_accum_inc=0.02,
+            fatigue_reset=0.4,
+            fpn_collapse_dan_mult=0.6,
+            fpn_collapse_dmn_inc=0.2,
+            fpn_base_demand=0.2,
+            fpn_focus_mult=2.0,
             softmax_temperature=2.0,   
             fatigue_threshold=0.75,
             transition_thresholds=TransitionThresholds.expert()
@@ -160,6 +211,22 @@ class ActiveInferenceParameters:
             'fpn_equanimity_value': self.fpn_equanimity_value,
             'distraction_pressure': self.distraction_pressure,
             'fatigue_rate': self.fatigue_rate,
+            'smoothing': self.smoothing,
+            'blend_factor_transition': self.blend_factor_transition,
+            'blend_factor_state': self.blend_factor_state,
+            'blend_variation': self.blend_variation,
+            'transition_perturb_std': self.transition_perturb_std,
+            'transition_variation_low': self.transition_variation_low,
+            'transition_variation_high': self.transition_variation_high,
+            'vfe_accum_decay': self.vfe_accum_decay,
+            'vfe_accum_alpha': self.vfe_accum_alpha,
+            'fpn_accum_decay': self.fpn_accum_decay,
+            'fpn_accum_inc': self.fpn_accum_inc,
+            'fatigue_reset': self.fatigue_reset,
+            'fpn_collapse_dan_mult': self.fpn_collapse_dan_mult,
+            'fpn_collapse_dmn_inc': self.fpn_collapse_dmn_inc,
+            'fpn_base_demand': self.fpn_base_demand,
+            'fpn_focus_mult': self.fpn_focus_mult,
             'softmax_temperature': self.softmax_temperature,
             'fatigue_threshold': self.fatigue_threshold,
             'transition_thresholds': {
@@ -187,11 +254,7 @@ DEFAULTS = {
     'VAN_TRIGGER': 0.7,
     'VAN_MAX': 0.85,
     'DEFAULT_DT': 1.0,
-    'SMOOTHING_EXPERT': 0.8,
-    'SMOOTHING_NOVICE': 0.6,
-    'FPN_ACCUM_DECAY': 0.98,
-    'FPN_ACCUM_INC': 0.02,
-    'FATIGUE_RESET': 0.4,
+    
     'ANTICORRELATION_FORCE': 0.25,
     'EFFICIENCY_WEIGHT_EXPERT': 0.7,
     'EFFICIENCY_WEIGHT_NOVICE': 0.3,
@@ -201,23 +264,14 @@ DEFAULTS = {
 # Additional tunable defaults for dynamics and transitions
 DEFAULTS.update({
     'NETWORK_BASE': 0.1,
-    'FPN_BASE_DEMAND': 0.2,
-    'FPN_FOCUS_MULT': 2.0,
     'FPN_TO_DAN_GAIN': 0.4,
     'HYSTERESIS_EXPERT': 0.2,
     'HYSTERESIS_NOVICE': 0.1,
     'VAN_SPIKE': 0.5,
-    'BLEND_FACTOR_TRANSITION': 0.3,
-    'BLEND_FACTOR_STATE': 0.4,
-    'BLEND_VARIATION': 0.1,
-    'TRANSITION_PERTURB_STD': 0.02,
-    'TRANSITION_VARIATION_LOW': -0.05,
-    'TRANSITION_VARIATION_HIGH': 0.1,
+    
     'TRANSITION_COUNTER_BASE': 3,
     'TRANSITION_COUNTER_RAND': 2,
-    'VFE_ACCUM_DECAY': 0.9,
-    'VFE_ACCUM_ALPHA': 0.1,
-    'DISTRACTION_PRESSURE': 0.4
+    
 })
 
 # Additional surface/modulation defaults (moved from hard-coded locations)
@@ -230,15 +284,8 @@ DEFAULTS.update({
     'DAN_BREATH_VALUE': 0.2,
     'DAN_PENDING_VALUE': 0.15,
     'DAN_PAIN_VALUE': 0.1,
-    'BASE_THETA_NOVICE': 0.2,
-    'BASE_THETA_EXPERT': 0.25,
-    'BASE_SIGMA_NOVICE': 0.05,
-    'BASE_SIGMA_EXPERT': 0.035,
+ 
 })
-
-# NOTE: `base_theta` and `base_sigma` have been migrated to
-# `ActiveInferenceParameters` (per-experience). The DEFAULTS entries above
-# are retained for backwards compatibility but can be removed in a future cleanup.
 # Network profiles for thoughtseeds and states
 NETWORK_PROFILES = {
     "thoughtseed_contributions": {
@@ -430,15 +477,6 @@ class MetacognitionParams:
         
         return meta_awareness
 
-class ActiveInferenceConfig:
-    """
-    Centralized configuration for active inference parameters.
-    Access parameters with ActiveInferenceConfig.get_params(experience_level)
-    """
-    @staticmethod
-    def get_params(experience_level):
-        """Get all active inference parameters for the specified experience level"""
-        if experience_level == 'expert':
-            return ActiveInferenceParameters.expert().as_dict()
-        else:
-            return ActiveInferenceParameters.novice().as_dict()
+def get_actinf_params_dict(experience_level: str) -> Dict[str, Union[float, Dict]]:
+    """Return a params dict for the requested experience level using `ActInfParams` dataclass."""
+    return ActInfParams.expert().as_dict() if experience_level == 'expert' else ActInfParams.novice().as_dict()

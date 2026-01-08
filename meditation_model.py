@@ -15,7 +15,7 @@ import copy
 
 from meditation_config import (
     THOUGHTSEEDS, STATES, STATE_DWELL_TIMES,
-    ActiveInferenceConfig, ThoughtseedParams, MetacognitionParams,
+    get_actinf_params_dict, ActInfParams, ThoughtseedParams, MetacognitionParams,
     NETWORK_PROFILES, DEFAULTS
 )
 from meditation_utils import ensure_directories, _save_json_outputs, ou_update, clip_array
@@ -46,9 +46,9 @@ class AgentConfig:
         self.dominant_ts_history = []
         self.state_history_over_time = []
         
-        # Get noise level from config
-        aif_params = ActiveInferenceConfig.get_params(experience_level)
-        self.noise_level = aif_params['noise_level']
+        # Instantiate typed per-agent params once and expose as `self.params`
+        self.params = ActInfParams.expert() if experience_level == 'expert' else ActInfParams.novice()
+        self.noise_level = self.params.noise_level
         
         # Track activation patterns at transition points
         self.transition_activations = {state: [] for state in self.states}
@@ -120,24 +120,43 @@ class ActInfAgent(AgentConfig):
         self.prediction_error_history = []
         self.precision_history = []
         
-        # Get all active inference parameters from centralized config
-        aif_params = ActiveInferenceConfig.get_params(experience_level)
-        
-        self.precision_weight = aif_params['precision_weight']
-        self.complexity_penalty = aif_params['complexity_penalty']
-        self.learning_rate = aif_params['learning_rate']
-        self.noise_level = aif_params['noise_level']
-        self.memory_factor = aif_params['memory_factor']
-        self.fpn_enhancement = aif_params['fpn_enhancement']
-        self.fpn_reflection_value = aif_params.get('fpn_reflection_value', 0.15)
-        self.fpn_equanimity_value = aif_params.get('fpn_equanimity_value', 0.2)
-        self.base_theta = aif_params.get('base_theta', DEFAULTS.get('BASE_THETA_NOVICE', 0.2))
-        self.base_sigma = aif_params.get('base_sigma', DEFAULTS.get('BASE_SIGMA_NOVICE', 0.05))
-        self.transition_thresholds = aif_params['transition_thresholds']
-        self.distraction_pressure = aif_params['distraction_pressure']
-        self.fatigue_rate = aif_params['fatigue_rate']
-        self.softmax_temperature = aif_params['softmax_temperature']
-        self.fatigue_threshold = aif_params['fatigue_threshold']
+        # Populate agent attributes from the single `self.params` instance
+        p = self.params
+        self.precision_weight = p.precision_weight
+        self.complexity_penalty = p.complexity_penalty
+        self.learning_rate = p.learning_rate
+        self.noise_level = p.noise_level
+        self.memory_factor = p.memory_factor
+        self.fpn_enhancement = p.fpn_enhancement
+        self.fpn_reflection_value = p.fpn_reflection_value
+        self.fpn_equanimity_value = p.fpn_equanimity_value
+        self.base_theta = p.base_theta
+        self.base_sigma = p.base_sigma
+        self.transition_thresholds = p.transition_thresholds
+        self.distraction_pressure = p.distraction_pressure
+        self.fatigue_rate = p.fatigue_rate
+        # Smoothing/blend/transition parameters
+        self.smoothing = p.smoothing
+        self.blend_factor_transition = p.blend_factor_transition
+        self.blend_factor_state = p.blend_factor_state
+        self.blend_variation = p.blend_variation
+        self.transition_perturb_std = p.transition_perturb_std
+        self.transition_variation_low = p.transition_variation_low
+        self.transition_variation_high = p.transition_variation_high
+        # VFE accumulator dynamics
+        self.vfe_accum_decay = p.vfe_accum_decay
+        self.vfe_accum_alpha = p.vfe_accum_alpha
+        # FPN accumulator / fatigue params (migrated from DEFAULTS)
+        self.fpn_accum_decay = p.fpn_accum_decay
+        self.fpn_accum_inc = p.fpn_accum_inc
+        self.fatigue_reset = p.fatigue_reset
+        # FPN collapse/base demand tunables
+        self.fpn_collapse_dan_mult = p.fpn_collapse_dan_mult
+        self.fpn_collapse_dmn_inc = p.fpn_collapse_dmn_inc
+        self.fpn_base_demand = p.fpn_base_demand
+        self.fpn_focus_mult = p.fpn_focus_mult
+        self.softmax_temperature = p.softmax_temperature
+        self.fatigue_threshold = p.fatigue_threshold
         
         # Track learned network profiles
         self.learned_network_profiles = {
@@ -191,7 +210,7 @@ class ActInfAgent(AgentConfig):
             # Models "effortless focus": If DAN is high (stable), FPN relaxes.
             if current_state in ['breath_control', 'redirect_breath']:
                 focus_error = max(0, 0.9 - current_dan)
-                fpn_demand = DEFAULTS['FPN_BASE_DEMAND'] + (DEFAULTS['FPN_FOCUS_MULT'] * focus_error)
+                fpn_demand = self.fpn_base_demand + (self.fpn_focus_mult * focus_error)
 
                 # Experts relax control faster when stable
                 efficiency_weight = DEFAULTS['EFFICIENCY_WEIGHT_EXPERT'] if self.experience_level == 'expert' else DEFAULTS['EFFICIENCY_WEIGHT_NOVICE']
@@ -226,14 +245,14 @@ class ActInfAgent(AgentConfig):
         if self.prev_network_acts:
             current_fpn = self.prev_network_acts['FPN']
             
-            # Accumulate FPN usage (Leaky Integrator)
-            self.fpn_accumulator = DEFAULTS['FPN_ACCUM_DECAY'] * self.fpn_accumulator + DEFAULTS['FPN_ACCUM_INC'] * current_fpn
+            # Accumulate FPN usage (Leaky Integrator) - per-agent params
+            self.fpn_accumulator = self.fpn_accum_decay * self.fpn_accumulator + self.fpn_accum_inc * current_fpn
             
             # Fatigue Threshold: When effort exceeds capacity, focus collapses.
             if self.fpn_accumulator > self.fatigue_threshold:
-                target_acts['DAN'] *= DEFAULTS.get('FPN_COLLAPSE_DAN_MULT', 0.6) # Collapse focus
-                target_acts['DMN'] += DEFAULTS.get('FPN_COLLAPSE_DMN_INC', 0.2) # Surge distraction
-                self.fpn_accumulator = DEFAULTS.get('FATIGUE_RESET', 0.4) # Reset
+                target_acts['DAN'] *= self.fpn_collapse_dan_mult
+                target_acts['DMN'] += self.fpn_collapse_dmn_inc
+                self.fpn_accumulator = self.fatigue_reset
 
         # 3. Ornstein-Uhlenbeck Process (Smoothing & Stability)
         current_acts = {}

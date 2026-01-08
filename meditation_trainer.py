@@ -11,7 +11,7 @@ import logging
 import numpy as np
 
 from meditation_utils import ensure_directories, _save_json_outputs, compute_state_aggregates
-from meditation_config import STATE_DWELL_TIMES, DEFAULTS
+from meditation_config import STATE_DWELL_TIMES, DEFAULTS, ActInfParams, get_actinf_params_dict
 
 class Trainer:
     def __init__(self, agent):
@@ -62,20 +62,20 @@ class Trainer:
             # Calculate instantaneous meta-awareness
             raw_meta_awareness = agent.get_meta_awareness(current_state, activations)
 
-            # Apply smoothing (EMA)
-            smoothing = DEFAULTS['SMOOTHING_EXPERT'] if agent.experience_level == 'expert' else DEFAULTS['SMOOTHING_NOVICE']
+            # Apply smoothing (EMA) using agent-level smoothing
+            smoothing = getattr(agent, 'smoothing', get_actinf_params_dict(agent.experience_level).get('smoothing', 0.6))
 
             meta_awareness = smoothing * agent.prev_meta_awareness + (1 - smoothing) * raw_meta_awareness
             agent.prev_meta_awareness = meta_awareness
 
             if hasattr(agent, 'in_transition') and agent.in_transition:
                 # Continue smoothing the transition over multiple timesteps
-                base_blend = DEFAULTS['BLEND_FACTOR_TRANSITION']
-                blend_factor = base_blend * (1.0 + np.random.uniform(-DEFAULTS['BLEND_VARIATION'], DEFAULTS['BLEND_VARIATION']))
+                base_blend = getattr(agent, 'blend_factor_transition', 0.3)
+                blend_factor = base_blend * (1.0 + np.random.uniform(-getattr(agent, 'blend_variation', 0.1), getattr(agent, 'blend_variation', 0.1)))
 
                 # Add small random perturbations to transition target
                 perturbed_target = agent.transition_target.copy()
-                perturbed_target += np.random.normal(0, DEFAULTS['TRANSITION_PERTURB_STD'], size=len(perturbed_target))
+                perturbed_target += np.random.normal(0, getattr(agent, 'transition_perturb_std', 0.02), size=len(perturbed_target))
                 perturbed_target = np.clip(perturbed_target, DEFAULTS['TARGET_CLIP_MIN'], DEFAULTS['TARGET_CLIP_MAX'])
 
                 # Apply blending
@@ -101,8 +101,9 @@ class Trainer:
             if current_state in ["breath_control", "redirect_breath"]:
                 time_in_focused_state += 1
                 progress = min(1.5, current_dwell / max(10, dwell_limit))
-                # Prefer agent-provided distraction_pressure; fall back to DEFAULTS
-                distraction_pressure = getattr(agent, 'distraction_pressure', DEFAULTS.get('DISTRACTION_PRESSURE', 0.4))
+                # Prefer agent-provided distraction_pressure; fall back to per-experience params
+                fallback_dp = get_actinf_params_dict(agent.experience_level).get('distraction_pressure', 0.4)
+                distraction_pressure = getattr(agent, 'distraction_pressure', fallback_dp)
                 agent.distraction_buildup_rates.append(distraction_pressure * progress)
             else:
                 time_in_focused_state = 0
@@ -148,8 +149,10 @@ class Trainer:
             # --- L3 POLICY SWITCHING (VFE-Based) ---
             transition_happened = False
 
-            # Accumulate VFE (Evidence of Policy Failure)
-            agent.vfe_accumulator = 0.9 * agent.vfe_accumulator + 0.1 * free_energy
+            # Accumulate VFE (Evidence of Policy Failure) using agent-level dynamics
+            decay = getattr(agent, 'vfe_accum_decay', get_actinf_params_dict(agent.experience_level).get('vfe_accum_decay', 0.9))
+            alpha = getattr(agent, 'vfe_accum_alpha', get_actinf_params_dict(agent.experience_level).get('vfe_accum_alpha', 0.1))
+            agent.vfe_accumulator = decay * agent.vfe_accumulator + alpha * free_energy
 
             # Dynamic Threshold based on Experience
             base_threshold = 2.5 if agent.experience_level == 'expert' else 3.5
@@ -207,16 +210,16 @@ class Trainer:
                 new_target = agent.get_target_activations(current_state, meta_awareness)
 
                 # Introduce biological variability
-                low = DEFAULTS['TRANSITION_VARIATION_LOW']
-                high = DEFAULTS['TRANSITION_VARIATION_HIGH']
+                low = getattr(agent, 'transition_variation_low', -0.05)
+                high = getattr(agent, 'transition_variation_high', 0.1)
                 for i in range(len(new_target)):
                     variation = 1.0 + np.random.uniform(low, high)
                     new_target[i] *= variation
                     new_target[i] = max(DEFAULTS['TARGET_CLIP_MIN'], new_target[i])
 
                 # Blend current state into new state (Smooth Transition)
-                base_blend = DEFAULTS['BLEND_FACTOR_STATE']
-                blend_factor = base_blend * (1.0 + np.random.uniform(-DEFAULTS['BLEND_VARIATION'], DEFAULTS['BLEND_VARIATION']))
+                base_blend = getattr(agent, 'blend_factor_state', 0.4)
+                blend_factor = base_blend * (1.0 + np.random.uniform(-getattr(agent, 'blend_variation', 0.1), getattr(agent, 'blend_variation', 0.1)))
                 activations = (1 - blend_factor) * activations + blend_factor * new_target
 
                 # Add transition markers
@@ -240,14 +243,35 @@ class Trainer:
 
             aggregates = compute_state_aggregates(agent)
 
+            # Convert transition-related objects to JSON-serializable primitives
+            serial_transition_counts = {k: {kk: int(vv) for kk, vv in inner.items()} for k, inner in agent.transition_counts.items()}
+
+            tt = agent.transition_thresholds
+            serial_transition_thresholds = {
+                'mind_wandering': float(tt.mind_wandering),
+                'dmn_dan_ratio': float(tt.dmn_dan_ratio),
+                'meta_awareness': float(tt.meta_awareness),
+                'return_focus': float(tt.return_focus)
+            }
+
+            serial_state_transition_patterns = []
+            for (frm, to, ts_dict, net_dict, fe) in state_transition_patterns:
+                serial_state_transition_patterns.append({
+                    'from': frm,
+                    'to': to,
+                    'thoughtseed_activations': {k: float(v) for k, v in ts_dict.items()},
+                    'network_acts': {k: float(v) for k, v in net_dict.items()},
+                    'free_energy': float(fe)
+                })
+
             transition_stats = {
-                'transition_counts': agent.transition_counts,
-                'transition_thresholds': agent.transition_thresholds,
-                'natural_transitions': agent.natural_transition_count,
-                'forced_transitions': agent.forced_transition_count,
-                'transition_timestamps': transition_timestamps,
-                'state_transition_patterns': state_transition_patterns,
-                'distraction_buildup_rates': agent.distraction_buildup_rates,
+                'transition_counts': serial_transition_counts,
+                'transition_thresholds': serial_transition_thresholds,
+                'natural_transitions': int(agent.natural_transition_count),
+                'forced_transitions': int(agent.forced_transition_count),
+                'transition_timestamps': [int(x) for x in transition_timestamps],
+                'state_transition_patterns': serial_state_transition_patterns,
+                'distraction_buildup_rates': [float(x) for x in agent.distraction_buildup_rates],
                 'average_activations_at_transition': aggregates.get('average_activations_at_transition', {}),
                 'average_network_activations_by_state': aggregates.get('average_network_activations_by_state', {}),
                 'average_free_energy_by_state': aggregates.get('average_free_energy_by_state', {}),
