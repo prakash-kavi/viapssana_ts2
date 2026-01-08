@@ -99,6 +99,17 @@ class AgentConfig:
             experience_level=self.experience_level
         )
 
+    def __getattr__(self, name):
+        """Fallback attribute lookup: delegate to `self.params` when present.
+
+        This provides a safe compatibility layer so callers can access
+        per-agent parameters either via `agent.<attr>` or `agent.params.<attr>`.
+        """
+        params = self.__dict__.get('params')
+        if params is not None and hasattr(params, name):
+            return getattr(params, name)
+        raise AttributeError(f"{self.__class__.__name__} object has no attribute '{name}'")
+
 class ActInfAgent(AgentConfig):
     """
     Active Inference extension implementing the three-level Thoughtseeds Framework:
@@ -120,43 +131,9 @@ class ActInfAgent(AgentConfig):
         self.prediction_error_history = []
         self.precision_history = []
         
-        # Populate agent attributes from the single `self.params` instance
-        p = self.params
-        self.precision_weight = p.precision_weight
-        self.complexity_penalty = p.complexity_penalty
-        self.learning_rate = p.learning_rate
-        self.noise_level = p.noise_level
-        self.memory_factor = p.memory_factor
-        self.fpn_enhancement = p.fpn_enhancement
-        self.fpn_reflection_value = p.fpn_reflection_value
-        self.fpn_equanimity_value = p.fpn_equanimity_value
-        self.base_theta = p.base_theta
-        self.base_sigma = p.base_sigma
-        self.transition_thresholds = p.transition_thresholds
-        self.distraction_pressure = p.distraction_pressure
-        self.fatigue_rate = p.fatigue_rate
-        # Smoothing/blend/transition parameters
-        self.smoothing = p.smoothing
-        self.blend_factor_transition = p.blend_factor_transition
-        self.blend_factor_state = p.blend_factor_state
-        self.blend_variation = p.blend_variation
-        self.transition_perturb_std = p.transition_perturb_std
-        self.transition_variation_low = p.transition_variation_low
-        self.transition_variation_high = p.transition_variation_high
-        # VFE accumulator dynamics
-        self.vfe_accum_decay = p.vfe_accum_decay
-        self.vfe_accum_alpha = p.vfe_accum_alpha
-        # FPN accumulator / fatigue params (migrated from DEFAULTS)
-        self.fpn_accum_decay = p.fpn_accum_decay
-        self.fpn_accum_inc = p.fpn_accum_inc
-        self.fatigue_reset = p.fatigue_reset
-        # FPN collapse/base demand tunables
-        self.fpn_collapse_dan_mult = p.fpn_collapse_dan_mult
-        self.fpn_collapse_dmn_inc = p.fpn_collapse_dmn_inc
-        self.fpn_base_demand = p.fpn_base_demand
-        self.fpn_focus_mult = p.fpn_focus_mult
-        self.softmax_temperature = p.softmax_temperature
-        self.fatigue_threshold = p.fatigue_threshold
+        # Per-agent parameters live on `self.params` and are accessible
+        # directly (e.g. `self.params.precision_weight`) or via the
+        # `__getattr__` fallback implemented on `AgentConfig`.
         
         # Track learned network profiles
         self.learned_network_profiles = {
