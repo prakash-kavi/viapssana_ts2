@@ -131,6 +131,8 @@ class ActInfAgent(AgentConfig):
         self.fpn_enhancement = aif_params['fpn_enhancement']
         self.fpn_reflection_value = aif_params.get('fpn_reflection_value', 0.15)
         self.fpn_equanimity_value = aif_params.get('fpn_equanimity_value', 0.2)
+        self.base_theta = aif_params.get('base_theta', DEFAULTS.get('BASE_THETA_NOVICE', 0.2))
+        self.base_sigma = aif_params.get('base_sigma', DEFAULTS.get('BASE_SIGMA_NOVICE', 0.05))
         self.transition_thresholds = aif_params['transition_thresholds']
         self.distraction_pressure = aif_params['distraction_pressure']
         self.fatigue_rate = aif_params['fatigue_rate']
@@ -455,9 +457,9 @@ class ActInfAgent(AgentConfig):
 
         # 2. Set Stochastic Parameters (Ornstein-Uhlenbeck)
         # Theta (Reversion Speed)
-        base_theta = DEFAULTS.get('BASE_THETA_NOVICE', 0.2) if self.experience_level == 'novice' else DEFAULTS.get('BASE_THETA_EXPERT', 0.25)
+        base_theta = self.base_theta
         # Sigma (Volatility)
-        base_sigma = DEFAULTS.get('BASE_SIGMA_NOVICE', 0.05) if self.experience_level == 'novice' else DEFAULTS.get('BASE_SIGMA_EXPERT', 0.035)
+        base_sigma = self.base_sigma
         
         # 3. Apply OU Update
         for i, ts in enumerate(self.thoughtseeds):

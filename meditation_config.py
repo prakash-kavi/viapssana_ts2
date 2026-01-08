@@ -99,6 +99,8 @@ class ActiveInferenceParameters:
     fpn_equanimity_value: float
     distraction_pressure: float
     fatigue_rate: float
+    base_theta: float
+    base_sigma: float
     softmax_temperature: float
     fatigue_threshold: float
     transition_thresholds: TransitionThresholds
@@ -116,6 +118,8 @@ class ActiveInferenceParameters:
             fpn_equanimity_value=0.2,
             distraction_pressure=1.30,
             fatigue_rate=0.30,
+            base_theta=0.2,
+            base_sigma=0.05,
             softmax_temperature=2.5,
             fatigue_threshold=0.50,
             transition_thresholds=TransitionThresholds.novice()
@@ -134,6 +138,8 @@ class ActiveInferenceParameters:
             fpn_equanimity_value=0.25,
             distraction_pressure=0.62,
             fatigue_rate=0.15,         
+            base_theta=0.25,
+            base_sigma=0.035,
             softmax_temperature=2.0,   
             fatigue_threshold=0.75,
             transition_thresholds=TransitionThresholds.expert()
@@ -148,6 +154,8 @@ class ActiveInferenceParameters:
             'noise_level': self.noise_level,
             'memory_factor': self.memory_factor,
             'fpn_enhancement': self.fpn_enhancement,
+            'base_theta': self.base_theta,
+            'base_sigma': self.base_sigma,
             'fpn_reflection_value': self.fpn_reflection_value,
             'fpn_equanimity_value': self.fpn_equanimity_value,
             'distraction_pressure': self.distraction_pressure,
@@ -227,6 +235,10 @@ DEFAULTS.update({
     'BASE_SIGMA_NOVICE': 0.05,
     'BASE_SIGMA_EXPERT': 0.035,
 })
+
+# NOTE: `base_theta` and `base_sigma` have been migrated to
+# `ActiveInferenceParameters` (per-experience). The DEFAULTS entries above
+# are retained for backwards compatibility but can be removed in a future cleanup.
 # Network profiles for thoughtseeds and states
 NETWORK_PROFILES = {
     "thoughtseed_contributions": {
