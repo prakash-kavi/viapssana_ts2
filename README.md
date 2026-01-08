@@ -2,84 +2,89 @@
 
 This repository contains the reference implementation of the **Thoughtseeds Framework** for modeling Vipassana meditation dynamics.
 
-**Important Note:** This project is a **computational simulation of a dynamical system** that implements **stochastic dynamics with coupled Ornstein-Uhlenbeck processes** within an Active Inference formulation. It is a theoretical model designed to explore cognitive architectures and **does not model real-world empirical data**.
+Important: this is a stochastic simulation using coupled Ornstein–Uhlenbeck dynamics under an Active Inference formulation. It is intended for computational exploration and does not substitute for empirical data.
 
-It demonstrates the architectural utility of the "Thoughtseeds" framework as a scaffold for linking subjective phenomenology with measurable neural dynamics. The three-level hierarchical structure (attentional networks â†’ thoughtseeds â†’ meta-cognition) captures the nested organization of the meditative mind, replicating complex expertâ€“novice phenomenological differences through the minimization of Variational Free Energy (VFE).
+## Conceptual Overview
 
-This implementation is a significant revision of the earlier work presented at [IWAI 2025](https://iwaiworkshop.github.io/): https://github.com/prakash-kavi/aif_iwai2025_thoughtseeds
+- Level 1: attentional networks (DMN, VAN, DAN, FPN)
+- Level 2: thoughtseed dynamics (competing content-level activations)
+- Level 3: meta-cognition (precision modulation and policy switching)
 
-## Conceptual Framework
+The model minimizes Variational Free Energy (VFE) through perception–action–learning cycles and captures qualitative expert–novice differences via parameterized priors and precision settings.
 
-![Figure 1](Mediative_cycle.jpg)
+## Project Structure (key files)
 
-**Figure 1. The four canonical stages of Focussed Attention meditation**
-Breath Focus, Mind Wandering, Meta-Awareness, and Redirect Attention.
+- **`meditation_model.py`**: core agent implementation (`AgentConfig`, `ActInfAgent`) — dynamics, inference, and small learning updates.
+- **`meditation_trainer.py`**: `Trainer` class that orchestrates experiment runs (extracted from the agent for testability and CI).
+- **`meditation_utils.py`**: I/O helpers, `ou_update`, JSON serialization, and aggregate computations.
+- **`meditation_config.py`**: parameter profiles, `DEFAULTS` for central numeric constants.
+- **`run_simulation.py`**: high-level entrypoint; uses `Trainer.train()` and supports reproducible runs (seed + output_dir).
+- **`viz/`**: plotting scripts (`plot_attractors.py`, `plot_diagnostics.py`, `plot_convergence.py`) and plotting utilities.
+- **`data/`**, **`plots/`**: generated JSON outputs and figures.
 
-![Figure 2](Thoughtseeds%20Framework.jpg)
+## Quick Start
 
-**Figure 2. Thoughtseeds Framework**
-Three-level hierarchical organization of thoughtseeds framework, rooted in Active Inference and Global Workspace Theory (GWT).
-
-*   **Level 1: Attentional Network Substrate** comprises four simplified attentional networks (Yeo et al., 2011)â€”DMN, VAN, DAN, and FPN. These networks are substrates, i.e., large-scale functional ensembles of neuronal packets at nested scales that provide the context for finer-grained dynamics.
-*   **Level 2: Thoughtseed Network** consists of attentional agents (thoughtseeds), such as breath_focus, pending_tasks, or self_reflection, which emerge from coordinated activity across the Level 1 ensembles. Thoughtseeds are hypothesized to represent specific contents of thought or attention, and compete for dominance in the Global Workspace via a simplified winner-takes-all dynamics (Baars 1997; Dehaene and Changeux, 2011).
-*   **Level 3: Meta-cognition** regulates precision weighting and meta-awareness, gating which thoughtseeds are amplified or suppressed to align behavior with meditative goals.
-
-The system operates by minimizing **Variational Free Energy (VFE)**, where the agent (meditator) attempts to align their internal model (expectations of focus) with sensory states (current thoughtseeds). Novices exhibit higher VFE and volatility due to weaker priors and lower precision, while Experts demonstrate "Equanimity" through optimized precision weighting and efficient error minimization.
-
-## Project Structure
-
-The codebase is organized for reproducibility and clarity:
-
-*   **`meditation_model.py`**: Core implementation of the `ActInfLearner` class, implementing the Active Inference loop (Perception -> Action -> Learning).
-*   **`meditation_config.py`**: Centralized configuration for simulation parameters, defining specific profiles for Novice and Expert meditators (priors, network profiles, transition thresholds).
-*   **`run_simulation.py`**: Driver script to execute the simulation for Novice and Expert profiles and generate data.
-*   **`viz/plotting_utils.py`**: Shared utilities for data loading and publication-quality plotting styles.
-*   **`viz/plot_diagnostics.py`**: Generates time-series and distribution plots (Figure 3).
-*   **`viz/plot_attractors.py`**: Generates 2D and 3D attractor landscape visualizations (Figure 5).
-*   **`viz/plot_convergence.py`**: Generates convergence metrics (Figure S1).
-*   **`data/`**: Contains the generated JSON outputs from the simulation.
-*   **`plots/`**: Contains the generated figures used in the manuscript.
-
-## Reproducing the Results
-
-### 1. Install Dependencies
+1. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Run the Simulation
-To generate the data (Novice and Expert profiles):
+2. Run the simulation (reproducible):
 ```bash
 python run_simulation.py
 ```
-This will populate the `data/` directory with JSON files containing training history and stabilized parameters.
+`run_simulation.py` calls `Trainer.train(..., seed=42)` by default; to change seed or output path, edit or call the trainer directly from a small script:
 
-### 3. Generate Figures
-The figures in the manuscript can be reproduced using the following scripts:
+```python
+from meditation_model import ActInfAgent
+from meditation_trainer import Trainer
 
-| Figure | Description | Script | Output |
-| :--- | :--- | :--- | :--- |
-| **Figures 3 & 4** | Reference Profile Diagnostics & Hierarchical Dynamics | `python -m viz.plot_diagnostics` | `plots/Fig3_*.png, plots/Fig4_*.png` |
-| **Figure 5** | Attractor Landscapes | `python -m viz.plot_attractors` | `plots/Fig5_*.png` |
-| **Figure S1** | Convergence Diagnostics (Supplementary) | `python -m viz.plot_convergence` | `plots/FigS1_*.png` |
-
-## Data Files
-
-*   `active_inference_params_*.json`: Learned parameters (precision, complexity, etc.) and network expectations.
-*   `transition_stats_*.json`: Statistics on state transitions and dwell times.
-*   `thoughtseed_params_*.json`: Thoughtseed parameters and full time-series history.
-
-## Validation Utilities
-
-The `utils/` directory contains diagnostic scripts for validating simulation outputs:
-
-*   **`analyze_steady_state.py`**: Analyzes convergence to steady-state by examining state distributions over the final 200 timesteps. Helps verify that the simulation has reached stable dynamics before using data for analysis.
-*   **`verify_stats.py`**: Comprehensive validation tool that computes Free Energy, network activations, dwell times, meta-awareness statistics, and attractor dynamics metrics for both novice and expert profiles. Useful for cross-checking manuscript claims against simulation outputs.
-
-Run from the project root:
-```bash
-python -m utils.analyze_steady_state
-python -m utils.verify_stats
+agent = ActInfAgent(experience_level='novice', timesteps_per_cycle=1000)
+Trainer(agent).train(save_outputs=True, output_dir='data/my_run', seed=12345)
 ```
+
+3. Regenerate publication figures:
+```bash
+python -m viz.plot_attractors
+python -m viz.plot_diagnostics
+python -m viz.plot_convergence
+```
+
+Generated outputs appear under `data/` (JSON) and `plots/` (PNGs).
+
+## Reproducibility & Outputs
+
+- The `Trainer.train()` method accepts optional `seed` (sets NumPy RNG) and `output_dir` (path for JSON outputs).
+- Default numeric constants and thresholds are centralized in `meditation_config.DEFAULTS` for maintainability.
+- JSON outputs include `transition_stats_<level>.json`, `thoughtseed_params_<level>.json`, and `active_inference_params_<level>.json`.
+
+## Developer Notes
+
+- Code style: run `black`/`isort` and `ruff` for formatting and linting.
+- Key refactors already applied: training extracted to `meditation_trainer.py`, OU helper `ou_update` moved to `meditation_utils.py`, and `DEFAULTS` centralized in `meditation_config.py`.
+- Suggested next steps for publication readiness: add minimal CI (import + smoke run), pin versions in `requirements.txt`, and add a short regression check comparing summary statistics to a baseline.
+
+## Useful Commands
+
+```bash
+# run full simulation
+python run_simulation.py
+
+# regenerate plots
+python -m viz.plot_attractors
+python -m viz.plot_diagnostics
+python -m viz.plot_convergence
+
+# run an ad-hoc trainer with custom seed/output
+python - <<'PY'
+from meditation_model import ActInfAgent
+from meditation_trainer import Trainer
+Trainer(ActInfAgent('novice', timesteps_per_cycle=500)).train(save_outputs=True, output_dir='data/run_500', seed=2026)
+PY
+```
+
+---
+
+If you want, I can add a short `docs/` snippet describing `DEFAULTS` and a CI workflow. Would you like that next?
 
 

@@ -165,12 +165,51 @@ STATE_DWELL_TIMES = {
     'expert': DwellTimeConfig.expert().__dict__
 }
 
-# Network profiles - align with meditation neuroscience literature 
-# DMN Suppression: Brewer et al., 2022; Hasenkamp & Barsalou, 2012
-# DAN/FPN Enhancement: Tang et al., 2015; Lutz et al., 2008; Malinowski (2013)
-# Salience Detection and VAN: Seeley et al., 2007; Menon & Uddin, 2010; Kirk et al., 2016; Farb et al., 2007
-# DMN-DAN Anticorrelation: Fox et al., 2005; Spreng et al., 2013; Mooneyham et al., 2017; Josipovic et al. 2012
-# Meta-awareness and Mind Wandering: Lutz et al., 2015; Christoff et al., 2009; Fox et al., 2015
+# Project-wide numeric defaults to avoid magic numbers
+DEFAULTS = {
+    'TARGET_CLIP_MIN': 0.05,
+    'TARGET_CLIP_MAX': 1.0,
+    'ACTIVATION_CLIP_MIN': 0.01,
+    'ACTIVATION_CLIP_MAX': 0.99,
+    'NETWORK_CLIP_MIN': 0.05,
+    'NETWORK_CLIP_MAX': 0.9,
+    'VAN_TRIGGER': 0.7,
+    'VAN_MAX': 0.85,
+    'DEFAULT_DT': 1.0,
+    'SMOOTHING_EXPERT': 0.8,
+    'SMOOTHING_NOVICE': 0.6,
+    'FPN_ACCUM_DECAY': 0.98,
+    'FPN_ACCUM_INC': 0.02,
+    'FATIGUE_RESET': 0.4,
+    'ANTICORRELATION_FORCE': 0.25,
+    'EFFICIENCY_WEIGHT_EXPERT': 0.7,
+    'EFFICIENCY_WEIGHT_NOVICE': 0.3,
+    'MIN_HISTORY_FOR_LEARNING': 10
+}
+
+# Additional tunable defaults for dynamics and transitions
+DEFAULTS.update({
+    'NETWORK_BASE': 0.1,
+    'FPN_BASE_DEMAND': 0.2,
+    'FPN_FOCUS_MULT': 2.0,
+    'FPN_TO_DAN_GAIN': 0.4,
+    'HYSTERESIS_EXPERT': 0.2,
+    'HYSTERESIS_NOVICE': 0.1,
+    'VAN_SPIKE': 0.5,
+    'BLEND_FACTOR_TRANSITION': 0.3,
+    'BLEND_FACTOR_STATE': 0.4,
+    'BLEND_VARIATION': 0.1,
+    'TRANSITION_PERTURB_STD': 0.02,
+    'TRANSITION_VARIATION_LOW': -0.05,
+    'TRANSITION_VARIATION_HIGH': 0.1,
+    'TRANSITION_COUNTER_BASE': 3,
+    'TRANSITION_COUNTER_RAND': 2,
+    'VFE_ACCUM_DECAY': 0.9,
+    'VFE_ACCUM_ALPHA': 0.1,
+    'DISTRACTION_PRESSURE_NOVICE': 0.4,
+    'DISTRACTION_PRESSURE_EXPERT': 0.15
+})
+# Network profiles for thoughtseeds and states
 NETWORK_PROFILES = {
     "thoughtseed_contributions": {
         "breath_focus": NetworkProfile(DMN=0.2, VAN=0.3, DAN=0.65, FPN=0.6).__dict__,

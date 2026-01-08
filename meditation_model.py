@@ -2,8 +2,8 @@
 meditation_model.py
 
 Implements core meditation models:
-1. RuleBasedLearner: Foundation class providing stochastic thoughtseed dynamics and state transitions.
-2. ActInfLearner: Active Inference extension implementing the three-level framework.
+1. `AgentConfig`: Foundation class providing stochastic thoughtseed dynamics and state transitions.
+2. `ActInfAgent`: Active Inference extension implementing the three-level framework.
 """
 
 import numpy as np
@@ -14,13 +14,13 @@ from collections import defaultdict
 import copy
 
 from meditation_config import (
-    THOUGHTSEEDS, STATES, STATE_DWELL_TIMES, 
+    THOUGHTSEEDS, STATES, STATE_DWELL_TIMES,
     ActiveInferenceConfig, ThoughtseedParams, MetacognitionParams,
-    NETWORK_PROFILES
+    NETWORK_PROFILES, DEFAULTS
 )
-from meditation_utils import ensure_directories, _save_json_outputs
+from meditation_utils import ensure_directories, _save_json_outputs, ou_update
 
-class RuleBasedLearner:
+class AgentConfig:
     """
     Foundation class for thoughtseed dynamics.
     Provides core methods for behavior, meta-awareness, and state transitions.
@@ -59,7 +59,7 @@ class RuleBasedLearner:
         # Initialize accumulators (Leaky Integrators)
         self.dmn_accumulator = 0.0
         self.fpn_accumulator = 0.0
-        # Placeholder for previous network activations (initialized in ActInfLearner)
+        # Placeholder for previous network activations (initialized in ActInfAgent)
         self.prev_network_acts = None
 
     def get_target_activations(self, state, meta_awareness):
@@ -99,7 +99,7 @@ class RuleBasedLearner:
             experience_level=self.experience_level
         )
 
-class ActInfLearner(RuleBasedLearner):
+class ActInfAgent(AgentConfig):
     """
     Active Inference extension implementing the three-level Thoughtseeds Framework:
     1. Attentional Network Ensembles (DMN, VAN, DAN, FPN)
@@ -141,9 +141,7 @@ class ActInfLearner(RuleBasedLearner):
             "state_network_expectations": {state: {} for state in self.states}
         }
         
-        # Initialize tracking variables
-        self.distraction_buildup_rates = []
-        self.transition_activations = {state: [] for state in self.states}
+        # Initialize tracking variables (already defined on AgentConfig)
         
         self.in_transition = False
         self.transition_counter = 0
@@ -168,7 +166,7 @@ class ActInfLearner(RuleBasedLearner):
         ts_to_network = self.learned_network_profiles["thoughtseed_contributions"]
         
         # 1. Calculate Base Targets
-        target_acts = {net: 0.1 for net in self.networks}
+        target_acts = {net: DEFAULTS['NETWORK_BASE'] for net in self.networks}
         
         # Bottom-up: Thoughtseeds -> Networks
         for i, ts in enumerate(self.thoughtseeds):
@@ -194,23 +192,23 @@ class ActInfLearner(RuleBasedLearner):
             # Models "effortless focus": If DAN is high (stable), FPN relaxes.
             if current_state in ['breath_control', 'redirect_breath']:
                 focus_error = max(0, 0.9 - current_dan)
-                fpn_demand = 0.2 + (2.0 * focus_error)
-                
+                fpn_demand = DEFAULTS['FPN_BASE_DEMAND'] + (DEFAULTS['FPN_FOCUS_MULT'] * focus_error)
+
                 # Experts relax control faster when stable
-                efficiency_weight = 0.7 if self.experience_level == 'expert' else 0.3
+                efficiency_weight = DEFAULTS['EFFICIENCY_WEIGHT_EXPERT'] if self.experience_level == 'expert' else DEFAULTS['EFFICIENCY_WEIGHT_NOVICE']
                 target_acts['FPN'] = (1 - efficiency_weight) * target_acts['FPN'] + efficiency_weight * fpn_demand
 
             # B. FPN Drives DAN + DAN Hysteresis
             # FPN Drive: Top-down recruitment with saturation kinetics
-            target_acts['DAN'] += 0.4 * current_fpn * (1.0 - current_dan)
+            target_acts['DAN'] += DEFAULTS['FPN_TO_DAN_GAIN'] * current_fpn * (1.0 - current_dan)
             
             # DAN Hysteresis: Momentum of sustained attention; disrupted by DMN
             current_dmn = self.prev_network_acts.get('DMN', 0)
-            hysteresis_strength = 0.2 if self.experience_level == 'expert' else 0.1
+            hysteresis_strength = DEFAULTS['HYSTERESIS_EXPERT'] if self.experience_level == 'expert' else DEFAULTS['HYSTERESIS_NOVICE']
             target_acts['DAN'] += hysteresis_strength * current_dan * (1.0 - current_dmn)
 
         # C. Mutual Inhibition (Task-Positive vs Task-Negative)
-        anticorrelation_force = 0.25
+        anticorrelation_force = DEFAULTS['ANTICORRELATION_FORCE']
         if self.prev_network_acts:
             target_acts['DAN'] -= anticorrelation_force * self.prev_network_acts['DMN'] * target_acts['DAN']
             target_acts['DMN'] -= anticorrelation_force * self.prev_network_acts['DAN'] * target_acts['DMN']
@@ -223,7 +221,7 @@ class ActInfLearner(RuleBasedLearner):
             # Fire if threshold crossed (Refractory period via reset)
             van_trigger_threshold = 0.7
             if self.dmn_accumulator > van_trigger_threshold:
-                target_acts['VAN'] += 0.5  # Salience spike
+                target_acts['VAN'] += DEFAULTS['VAN_SPIKE']  # Salience spike
                 self.dmn_accumulator = 0.0 # Reset
 
         # D. FPN Accumulator (Cognitive Fatigue)
@@ -231,13 +229,13 @@ class ActInfLearner(RuleBasedLearner):
             current_fpn = self.prev_network_acts['FPN']
             
             # Accumulate FPN usage (Leaky Integrator)
-            self.fpn_accumulator = 0.98 * self.fpn_accumulator + 0.02 * current_fpn
+            self.fpn_accumulator = DEFAULTS['FPN_ACCUM_DECAY'] * self.fpn_accumulator + DEFAULTS['FPN_ACCUM_INC'] * current_fpn
             
             # Fatigue Threshold: When effort exceeds capacity, focus collapses.
             if self.fpn_accumulator > self.fatigue_threshold:
-                target_acts['DAN'] *= 0.6 # Collapse focus
-                target_acts['DMN'] += 0.2 # Surge distraction
-                self.fpn_accumulator = 0.4 # Reset
+                target_acts['DAN'] *= DEFAULTS.get('FPN_COLLAPSE_DAN_MULT', 0.6) # Collapse focus
+                target_acts['DMN'] += DEFAULTS.get('FPN_COLLAPSE_DMN_INC', 0.2) # Surge distraction
+                self.fpn_accumulator = DEFAULTS.get('FATIGUE_RESET', 0.4) # Reset
 
         # 3. Ornstein-Uhlenbeck Process (Smoothing & Stability)
         current_acts = {}
@@ -250,22 +248,18 @@ class ActInfLearner(RuleBasedLearner):
             for net in self.networks:
                 x_prev = self.prev_network_acts[net]
                 mu = target_acts[net]
-                
-                # OU Update: x_new = x_prev + theta*(mu - x_prev)*dt + sigma*noise
-                noise = np.random.normal(0, 1)
-                dx = theta * (mu - x_prev) * dt + sigma * noise
-                
-                current_acts[net] = x_prev + dx
+
+                current_acts[net] = float(ou_update(x_prev, mu, theta, sigma, dt))
         else:
             # First step initialization
             current_acts = target_acts
             
-        # Normalize 
+        # Normalize
         for net in self.networks:
-            current_acts[net] = np.clip(current_acts[net], 0.05, 0.9)
+            current_acts[net] = np.clip(current_acts[net], DEFAULTS['NETWORK_CLIP_MIN'], DEFAULTS['NETWORK_CLIP_MAX'])
 
-        # VAN values > 0.85 are neurophysiologically implausible
-        max_van = 0.85
+        # VAN values > neurophysiological cap
+        max_van = DEFAULTS['VAN_MAX']
         if current_acts['VAN'] > max_van:
             current_acts['VAN'] = max_van
             
@@ -424,7 +418,7 @@ class ActInfLearner(RuleBasedLearner):
         """
         Update thoughtseed activations using Ornstein-Uhlenbeck process.
         """
-        dt = 1.0
+        dt = DEFAULTS['DEFAULT_DT']
         updated_activations = current_activations.copy()
         
         # 1. Calculate Dynamic Targets (mu)
@@ -455,7 +449,6 @@ class ActInfLearner(RuleBasedLearner):
         # 2. Set Stochastic Parameters (Ornstein-Uhlenbeck)
         # Theta (Reversion Speed)
         base_theta = 0.2 if self.experience_level == 'novice' else 0.25
-        
         # Sigma (Volatility)
         base_sigma = 0.05 if self.experience_level == 'novice' else 0.035
         
@@ -463,28 +456,25 @@ class ActInfLearner(RuleBasedLearner):
         for i, ts in enumerate(self.thoughtseeds):
             x_prev = current_activations[i]
             target = mu[i]
-            
+
             theta = base_theta
             sigma = base_sigma
-            
+
             # Mind wandering is more volatile and "sticky"
             if current_state == "mind_wandering":
                 sigma *= 1.5
                 if ts in ["pending_tasks", "pain_discomfort"]:
-                    theta *= 0.5 
-            
+                    theta *= 0.5
+
             # Focused states are more stable
             if current_state == "breath_control" and ts == "breath_focus":
                 sigma *= 0.5
-                theta *= 1.5 
+                theta *= 1.5
+
+            # Calculate update using OU helper
+            updated_activations[i] = float(ou_update(x_prev, target, theta, sigma, dt))
             
-            # Calculate update
-            noise = np.random.normal(0, 1)
-            dx = theta * (target - x_prev) * dt + sigma * noise
-            
-            updated_activations[i] = x_prev + dx
-            
-        return np.clip(updated_activations, 0.01, 0.99)
+        return np.clip(updated_activations, DEFAULTS['ACTIVATION_CLIP_MIN'], DEFAULTS['ACTIVATION_CLIP_MAX'])
     
     def get_meta_awareness(self, current_state, activations):
         """Calculate meta-awareness using the base implementation"""
@@ -526,266 +516,10 @@ class ActInfLearner(RuleBasedLearner):
         return {k: v / total_exp for k, v in exp_scores.items()}
 
     def train(self, save_outputs=True):
+        """Delegate training to the external Trainer to keep the agent focused on
+        dynamics and small learning steps. Returns the agent after training.
         """
-        Train model using active inference.
-        1. Calc network activations (Eq 1)
-        2. Compute free energy (Eq 2)
-        3. Update profiles (Eq 3)
-        4. State transitions (Eq 4)
-        """
-        if save_outputs:
-            ensure_directories()
-        
-        # Initialize training sequence
-        state_sequence = ["breath_control", "mind_wandering", "meta_awareness", "redirect_breath"]
-        current_state_index = 0
-        current_state = state_sequence[current_state_index]
-        current_dwell = 0
-        dwell_limit = self.get_dwell_time(current_state)
-        
-        # Initialize activations
-        activations = np.full(self.num_thoughtseeds, np.random.uniform(0.05, 0.15))
-        activations = self.get_target_activations(current_state, 0.6)
-        prev_activations = activations.copy()
-        
-        # Track focused state timing
-        time_in_focused_state = 0
-        state_transition_patterns = []
-        transition_timestamps = []
-        
-        # Initialize network tracking
-        network_acts = self.compute_network_activations(activations, current_state, 0.6)
-        prev_network_acts = network_acts.copy()
-        
-        # Initialize meta-awareness for smoothing
-        self.prev_meta_awareness = self.get_meta_awareness(current_state, activations)
-        
-        # Initialize VFE accumulator for policy switching
-        self.vfe_accumulator = 0.0
-        
-        # Training loop
-        for t in range(self.timesteps):
-            # --- PASS 1: TOP-DOWN (Action & Prediction) ---
-            
-            # Calculate instantaneous meta-awareness
-            raw_meta_awareness = self.get_meta_awareness(current_state, activations)
-            
-            # Apply smoothing (EMA)
-            smoothing = 0.8 if self.experience_level == 'expert' else 0.6
-            
-            meta_awareness = smoothing * self.prev_meta_awareness + (1 - smoothing) * raw_meta_awareness
-            self.prev_meta_awareness = meta_awareness
-            
-            if hasattr(self, 'in_transition') and self.in_transition:
-                # Continue smoothing the transition over multiple timesteps
-                blend_factor = 0.3 * (1.0 + np.random.uniform(-0.1, 0.1))
-                
-                # Add small random perturbations to transition target
-                perturbed_target = self.transition_target.copy()
-                perturbed_target += np.random.normal(0, 0.02, size=len(perturbed_target))
-                perturbed_target = np.clip(perturbed_target, 0.05, 0.9)
-                
-                # Apply blending
-                activations = (1 - blend_factor) * activations + blend_factor * perturbed_target
-                
-                self.transition_counter -= 1
-                if self.transition_counter <= 0:
-                    self.in_transition = False
+        from meditation_trainer import Trainer
 
-            # Get target activations (L3 -> L2 Prior)
-            target_activations = self.get_target_activations(current_state, meta_awareness)
-            
-            # Update thoughtseed dynamics (L2 Belief Update)
-            activations = self.update_thoughtseed_dynamics(
-                activations, 
-                target_activations, 
-                current_state, 
-                current_dwell, 
-                dwell_limit
-            )
-            
-            # Handle distraction tracking 
-            if current_state in ["breath_control", "redirect_breath"]:
-                time_in_focused_state += 1
-                progress = min(1.5, current_dwell / max(10, dwell_limit))
-                distraction_pressure = 0.4 if self.experience_level == 'novice' else 0.15
-                self.distraction_buildup_rates.append(distraction_pressure * progress)
-            else:
-                time_in_focused_state = 0
-                self.distraction_buildup_rates.append(0)
-                        
-            # --- PASS 2: BOTTOM-UP (Perception & Learning) ---
-            
-            # Compute network activations (L1 Generative Process)
-            network_acts = self.compute_network_activations(activations, current_state, meta_awareness)
-            
-            # Infer sensory state from networks (L1 -> L2 Sensory Evidence)
-            sensory_inference = self.get_sensory_inference(network_acts)
-            
-            # Calculate VFE (L2 Belief Revision & L3 Monitoring)
-            vfe_trend = 0.0
-            if len(self.free_energy_history) > 5:
-                vfe_trend = np.mean(np.diff(self.free_energy_history[-5:]))
-
-            free_energy, sensory_nll, prior_nll = self.calculate_vfe(
-                activations, target_activations, sensory_inference, meta_awareness, vfe_trend
-            )
-            
-            # Update network profiles based on prediction errors
-            dummy_errors = {net: sensory_nll * 0.1 for net in self.networks}
-            self.update_network_profiles(activations, network_acts, current_state, dummy_errors)
-            
-            # Record network state and free energy
-            self.network_activations_history.append(network_acts.copy())
-            self.free_energy_history.append(free_energy)
-            self.prediction_error_history.append(sensory_nll)
-            self.precision_history.append(0.5 + self.precision_weight * meta_awareness)
-            
-            # Identify dominant thoughtseed
-            dominant_ts = self.thoughtseeds[np.argmax(activations)]
-            
-            # Track histories
-            self.state_history.append(current_state)
-            self.activations_history.append(activations.copy())
-            self.meta_awareness_history.append(meta_awareness)
-            self.dominant_ts_history.append(dominant_ts)
-            self.state_history_over_time.append(self.state_indices[current_state])
-            
-            # --- L3 POLICY SWITCHING (VFE-Based) ---
-            transition_happened = False
-            
-            # Accumulate VFE (Evidence of Policy Failure)
-            self.vfe_accumulator = 0.9 * self.vfe_accumulator + 0.1 * free_energy
-            
-            # Dynamic Threshold based on Experience
-            base_threshold = 2.5 if self.experience_level == 'expert' else 3.5
-            
-            # Check for transition if we've been in the state long enough OR VFE is critical
-            critical_vfe = self.vfe_accumulator > (base_threshold * 1.5)
-            dwell_expired = current_dwell >= dwell_limit
-            
-            # Refractory period: Don't force transition via VFE if we just arrived
-            min_dwell = STATE_DWELL_TIMES[self.experience_level][current_state][0]
-            if dwell_expired or (critical_vfe and current_dwell >= min_dwell):
-                # 1. Get Transition Probabilities
-                probs = self.get_transition_probabilities(activations, network_acts)
-                
-                # 2. Force Transition
-                if current_state in probs:
-                    probs[current_state] = 0.0
-                
-                # Renormalize
-                total_prob = sum(probs.values())
-                if total_prob > 0:
-                    probs = {k: v / total_prob for k, v in probs.items()}
-                else: # pragma: no cover
-                    probs = {k: 1.0/(len(probs)-1) for k in probs if k != current_state}
-                
-                # 3. Sample Next State
-                states = list(probs.keys())
-                probabilities = list(probs.values())
-                next_state = np.random.choice(states, p=probabilities)
-                
-                # 4. Execute Transition
-                transition_happened = True
-                self.vfe_accumulator = 0.0
-                self.transition_activations[current_state].append(activations.copy())
-                self.natural_transition_count += 1
-                transition_timestamps.append(t)
-                state_transition_patterns.append((
-                    current_state, 
-                    next_state, 
-                    {ts: activations[i] for i, ts in enumerate(self.thoughtseeds)},
-                    {net: val for net, val in network_acts.items()},
-                    free_energy
-                ))
-                
-                self.transition_counts[current_state][next_state] += 1
-                
-                # Update state
-                if next_state in state_sequence:
-                    current_state_index = state_sequence.index(next_state)
-                current_state = next_state
-                current_dwell = 0
-                dwell_limit = self.get_dwell_time(current_state)
-
-                # Calculate new state targets
-                new_target = self.get_target_activations(current_state, meta_awareness)
-
-                # Introduce biological variability
-                for i in range(len(new_target)):
-                    variation = 1.0 + np.random.uniform(-0.05, 0.1)
-                    new_target[i] *= variation
-                    new_target[i] = max(0.06, new_target[i])
-
-                # Blend current state into new state (Smooth Transition)
-                blend_factor = 0.4 * (1.0 + np.random.uniform(-0.1, 0.1))
-                activations = (1 - blend_factor) * activations + blend_factor * new_target
-
-                # Add transition markers
-                self.in_transition = True
-                self.transition_counter = 3 + np.random.randint(0, 2)
-                self.transition_target = new_target.copy()
-
-            if not transition_happened:
-                current_dwell += 1
-            
-            # Store for next iteration
-            prev_activations = activations.copy()
-            prev_network_acts = network_acts.copy()
-            self.prev_network_acts = prev_network_acts.copy()
-        
-        # Save learned weights and network profiles
-        if save_outputs:
-            ensure_directories()
-        
-            # Save transition statistics with network data (use centralized aggregates)
-            from meditation_utils import compute_state_aggregates
-
-            aggregates = compute_state_aggregates(self)
-
-            transition_stats = {
-                'transition_counts': self.transition_counts,
-                'transition_thresholds': self.transition_thresholds,
-                'natural_transitions': self.natural_transition_count,
-                'forced_transitions': self.forced_transition_count,
-                'transition_timestamps': transition_timestamps,
-                'state_transition_patterns': state_transition_patterns,
-                'distraction_buildup_rates': self.distraction_buildup_rates,
-                'average_activations_at_transition': aggregates.get('average_activations_at_transition', {}),
-                'average_network_activations_by_state': aggregates.get('average_network_activations_by_state', {}),
-                'average_free_energy_by_state': aggregates.get('average_free_energy_by_state', {})
-            }
-            
-            # Debug: report network values by state
-            logging.info("%s NETWORK VALUES BY STATE:", self.experience_level.upper())
-            for state in self.states:
-                logging.info("  %s:", state)
-                indices = [j for j, s in enumerate(self.state_history) if s == state]
-                
-                if not indices: # pragma: no cover
-                    logging.info("    (No visits to this state)")
-                    continue
-                    
-                state_networks = {
-                    net: float(np.mean([
-                        self.network_activations_history[j][net]
-                        for j in indices
-                    ])) for net in self.networks
-                }
-                for net in self.networks:
-                    logging.info("    %s: %.2f", net, state_networks[net])
-
-            # Save the transition statistics
-            out_dir = os.path.join(os.path.dirname(__file__), "data")
-            os.makedirs(out_dir, exist_ok=True)
-            out_path = os.path.join(out_dir, f"transition_stats_{self.experience_level}.json")
-            with open(out_path, "w", encoding="utf-8") as f:
-                json.dump(transition_stats, f, indent=2)
-            logging.info("Saved transition stats -> %s", os.path.relpath(out_path))
-
-            logging.info("Active Inference training complete for %s.", self.experience_level)
-            logging.info("  - Natural transitions: %d, Forced transitions: %d", self.natural_transition_count, self.forced_transition_count)
-
-            # Generate JSON outputs (time series data and parameters)
-            _save_json_outputs(self)
+        trainer = Trainer(self)
+        return trainer.train(save_outputs=save_outputs)
