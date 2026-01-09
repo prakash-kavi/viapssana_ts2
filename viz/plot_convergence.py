@@ -15,6 +15,7 @@ from typing import Dict, List
 import logging
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 from config.meditation_config import STATES
 
@@ -181,7 +182,11 @@ def generate_all(window: int = 25, tail_span: int = 200) -> None:
             global_fe_max = max(global_fe_max, free_energy.max())
     for cohort in ("novice", "expert"):
         plot_convergence_panels(cohort, window=window, tail_span=tail_span, fe_ylim=(global_fe_min, global_fe_max))
-    logging.info("Saved convergence plots to %s", PLOT_DIR)
+    try:
+        rel = os.path.relpath(str(PLOT_DIR), start=os.getcwd())
+    except Exception:
+        rel = str(PLOT_DIR)
+    logging.info("Saved convergence plots to %s", rel)
 
 if __name__ == "__main__":
     generate_all()

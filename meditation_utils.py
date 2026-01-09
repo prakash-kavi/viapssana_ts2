@@ -110,7 +110,11 @@ def _save_json_outputs(learner, output_dir=None):
     with open(out_path_ai, "w", encoding="utf-8") as f:
         json.dump(active_inf_params, f, indent=2)
 
-    logging.info("  - JSON parameter files saved to %s directory", output_dir)
+    try:
+        rel = os.path.relpath(output_dir, start=os.getcwd())
+    except Exception:
+        rel = output_dir
+    logging.info("  - JSON parameter files saved to %s directory", rel)
 
 def to_json_serializable(obj):
     # Convert numpy arrays/dicts/lists into JSON-serializable structures

@@ -18,14 +18,21 @@ def _load_config_json(name: str) -> Optional[Dict]:
     JSON overrides are optional; defaults live in the Python code.
     Consider storing profiles under `config/profiles/`.
     """
-    cfg_path = os.path.join(os.path.dirname(__file__), name)
-    if not os.path.exists(cfg_path):
-        return None
-    try:
-        with open(cfg_path, 'r', encoding='utf-8') as fh:
-            return json.load(fh)
-    except Exception:
-        return None
+    base_dir = os.path.dirname(__file__)
+    # First check current config directory, then `config/profiles/` for overrides.
+    candidates = [
+        os.path.join(base_dir, name),
+        os.path.join(base_dir, 'profiles', name)
+    ]
+    for cfg_path in candidates:
+        if not os.path.exists(cfg_path):
+            continue
+        try:
+            with open(cfg_path, 'r', encoding='utf-8') as fh:
+                return json.load(fh)
+        except Exception:
+            continue
+    return None
 
 # Core thoughtseed and state definitions
 THOUGHTSEEDS = ['breath_focus', 'pain_discomfort', 'pending_tasks', 'self_reflection', 'equanimity']
@@ -420,38 +427,18 @@ DEFAULTS = {
     'VAN_TRIGGER': 0.7,
     'VAN_MAX': 0.85,
     'DEFAULT_DT': 1.0,
-    
-    'ANTICORRELATION_FORCE': 0.25,
-    'EFFICIENCY_WEIGHT_EXPERT': 0.7,
-    'EFFICIENCY_WEIGHT_NOVICE': 0.3,
     'MIN_HISTORY_FOR_LEARNING': 10
 }
 
 # Additional tunable defaults for dynamics and transitions
 DEFAULTS.update({
-    'NETWORK_BASE': 0.1,
-    'FPN_TO_DAN_GAIN': 0.4,
-    'HYSTERESIS_EXPERT': 0.2,
-    'HYSTERESIS_NOVICE': 0.1,
-    'VAN_SPIKE': 0.5,
-    
     'TRANSITION_COUNTER_BASE': 3,
     'TRANSITION_COUNTER_RAND': 2,
-    
 })
 
 # Additional surface/modulation defaults (moved from hard-coded locations)
-DEFAULTS.update({
-    'DMN_PENDING_VALUE': 0.15,
-    'DMN_REFLECTION_VALUE': 0.05,
-    'DMN_BREATH_VALUE': 0.2,
-    'VAN_PAIN_VALUE': 0.15,
-    'VAN_REFLECTION_VALUE': 0.2,
-    'DAN_BREATH_VALUE': 0.2,
-    'DAN_PENDING_VALUE': 0.15,
-    'DAN_PAIN_VALUE': 0.1,
- 
-})
+# Surface/modulation defaults intentionally left out — per-agent values live in ActInfParams
+# Default surface/modulation values are now provided by `ActInfParams` and optional JSON profiles.
  
 # Network profiles for thoughtseeds and states
 NETWORK_PROFILES = {

@@ -48,7 +48,8 @@ class AgentConfig:
         
         # Instantiate typed per-agent params once and expose as `self.params`.
         # Prefer a JSON-backed profile if available for easier experiment management.
-        config_path = os.path.join(os.path.dirname(__file__), 'config', 'actinf_defaults.json')
+        # Prefer JSON profiles under `config/profiles/` if present (loader supports both locations).
+        config_path = os.path.join(os.path.dirname(__file__), 'config', 'profiles', 'actinf_defaults.json')
         self.params = load_actinf_params_from_json(config_path, experience_level=experience_level)
         self.noise_level = self.params.noise_level
         

@@ -153,7 +153,11 @@ def plot_hierarchy(data, save_path=None):
     
     if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        logging.info("Saved Hierarchy Plot to %s", save_path)
+        try:
+            rel = os.path.relpath(str(save_path), start=os.getcwd())
+        except Exception:
+            rel = save_path
+        logging.info("Saved Hierarchy Plot to %s", rel)
     plt.close()
 
 def plot_time_series(novice_stats, expert_stats, save_path=None):
@@ -227,7 +231,11 @@ def plot_time_series(novice_stats, expert_stats, save_path=None):
     plt.tight_layout()
     if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        logging.info("Saved Time Series to %s", save_path)
+        try:
+            rel = os.path.relpath(str(save_path), start=os.getcwd())
+        except Exception:
+            rel = save_path
+        logging.info("Saved Time Series to %s", rel)
     plt.close()
 
 def plot_free_energy_bar(novice_stats, expert_stats, save_path=None):
@@ -278,7 +286,11 @@ def plot_free_energy_bar(novice_stats, expert_stats, save_path=None):
     plt.tight_layout()
     if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        logging.info("Saved FE Bar to %s", save_path)
+        try:
+            rel = os.path.relpath(str(save_path), start=os.getcwd())
+        except Exception:
+            rel = save_path
+        logging.info("Saved FE Bar to %s", rel)
     plt.close()
 
 def plot_network_radar(novice_ts, expert_ts, save_path=None):
@@ -341,7 +353,11 @@ def plot_network_radar(novice_ts, expert_ts, save_path=None):
     plt.tight_layout()
     if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        logging.info("Saved Radar to %s", save_path)
+        try:
+            rel = os.path.relpath(str(save_path), start=os.getcwd())
+        except Exception:
+            rel = save_path
+        logging.info("Saved Radar to %s", rel)
     plt.close()
 
 def get_dwell_times(stats):
@@ -399,7 +415,11 @@ def plot_dwell_times(novice_stats, expert_stats, save_path=None):
     plt.tight_layout()
     if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        logging.info("Saved Dwell Times to %s", save_path)
+        try:
+            rel = os.path.relpath(str(save_path), start=os.getcwd())
+        except Exception:
+            rel = save_path
+        logging.info("Saved Dwell Times to %s", rel)
     plt.close()
 
 if __name__ == "__main__":

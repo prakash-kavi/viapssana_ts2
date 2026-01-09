@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import numpy as np
 import logging
+import os
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib.colors import LinearSegmentedColormap
@@ -365,7 +366,11 @@ def generate_plots(tail: int | None = 200) -> None:
         novice, expert, 
         save_path=Path(pu.PLOT_DIR) / "Fig5B_Attractor3D.png"
     )
-    logging.info("Saved attractor plots to %s", pu.PLOT_DIR)
+    try:
+        rel = os.path.relpath(str(pu.PLOT_DIR), start=os.getcwd())
+    except Exception:
+        rel = str(pu.PLOT_DIR)
+    logging.info("Saved attractor plots to %s", rel)
 
 
 if __name__ == "__main__":
