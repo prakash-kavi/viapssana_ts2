@@ -4,9 +4,28 @@ meditation_config.py
 This file contains configuration data for the Vipassana Entropy meditation simulation,
 using dataclasses for improved type safety and maintainability.
 """
+from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, List, Tuple, Optional, Union
 import numpy as np
+import json
+import os
+
+# Helper: attempt to load a JSON config from the same `config/` directory (package)
+def _load_config_json(name: str) -> Optional[Dict]:
+    """Load optional JSON `<config_dir>/<name>`; return dict or None.
+
+    JSON overrides are optional; defaults live in the Python code.
+    Consider storing profiles under `config/profiles/`.
+    """
+    cfg_path = os.path.join(os.path.dirname(__file__), name)
+    if not os.path.exists(cfg_path):
+        return None
+    try:
+        with open(cfg_path, 'r', encoding='utf-8') as fh:
+            return json.load(fh)
+    except Exception:
+        return None
 
 # Core thoughtseed and state definitions
 THOUGHTSEEDS = ['breath_focus', 'pain_discomfort', 'pending_tasks', 'self_reflection', 'equanimity']
@@ -87,6 +106,60 @@ class StateTargetActivations:
             "self_reflection": self.self_reflection
         }
 
+
+
+
+def load_actinf_params_from_json(path: Optional[str], experience_level: str = 'novice') -> 'ActInfParams':
+    """Load ActInfParams from JSON file. If file missing or key absent, fall back to defaults.
+
+    Expects JSON with top-level keys `novice` and `expert` mapping to param dicts, or a flat dict.
+    """
+    if not path:
+        return ActInfParams.expert() if experience_level == 'expert' else ActInfParams.novice()
+
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    except Exception:
+        return ActInfParams.expert() if experience_level == 'expert' else ActInfParams.novice()
+
+    if isinstance(data, dict) and experience_level in data:
+        cfg = data[experience_level]
+    else:
+        cfg = data
+
+    # Basic validation: ensure keys exist and types are plausible before constructing dataclass.
+    def _validate_cfg(cfg_dict: Dict) -> bool:
+        if not isinstance(cfg_dict, dict):
+            return False
+        # numeric keys we expect to be floats/ints
+        numeric_keys = [
+            'precision_weight', 'learning_rate', 'noise_level', 'memory_factor',
+            'fpn_enhancement', 'distraction_pressure', 'fatigue_rate',
+            'vfe_accum_decay', 'vfe_accum_alpha', 'fpn_accum_decay', 'fpn_accum_inc'
+        ]
+        for k in numeric_keys:
+            if k in cfg_dict and not isinstance(cfg_dict[k], (int, float)):
+                return False
+        # transition thresholds must be dict with numeric entries if present
+        tt = cfg_dict.get('transition_thresholds')
+        if tt is not None:
+            if not isinstance(tt, dict):
+                return False
+            for kk in ['mind_wandering', 'dmn_dan_ratio', 'meta_awareness', 'return_focus']:
+                if kk in tt and not isinstance(tt[kk], (int, float)):
+                    return False
+        return True
+
+    if not _validate_cfg(cfg):
+        # fallback to defaults if validation fails
+        return ActInfParams.expert() if experience_level == 'expert' else ActInfParams.novice()
+
+    try:
+        return ActInfParams.from_dict(cfg, experience_level=experience_level)
+    except Exception:
+        return ActInfParams.expert() if experience_level == 'expert' else ActInfParams.novice()
+
 @dataclass
 class ActInfParams:
     precision_weight: float
@@ -107,6 +180,23 @@ class ActInfParams:
     fpn_collapse_dmn_inc: float
     fpn_base_demand: float
     fpn_focus_mult: float
+    # Network/dynamics tunables (migrated from DEFAULTS)
+    network_base: float
+    fpn_to_dan_gain: float
+    hysteresis_strength: float
+    anticorrelation_force: float
+    van_spike: float
+    # Surface / modulation defaults (DMN/VAN/DAN effects)
+    dmn_pending_value: float
+    dmn_reflection_value: float
+    dmn_breath_value: float
+    van_pain_value: float
+    van_reflection_value: float
+    dan_breath_value: float
+    dan_pending_value: float
+    dan_pain_value: float
+    # Efficiency weight (expert vs novice differences)
+    efficiency_weight: float
     # Per-agent smoothing/blending and transition noise
     smoothing: float
     blend_factor_transition: float
@@ -155,7 +245,23 @@ class ActInfParams:
             fpn_collapse_dmn_inc=0.2,
             fpn_base_demand=0.2,
             fpn_focus_mult=2.0,
+            # network/dynamics defaults (may be overridden by config/*.json)
+            network_base=0.1,
+            fpn_to_dan_gain=0.4,
+            hysteresis_strength=0.1,
+            anticorrelation_force=0.25,
+            van_spike=0.5,
+            # surface/modulation defaults (will migrate next)
+            dmn_pending_value=0.15,
+            dmn_reflection_value=0.05,
+            dmn_breath_value=0.2,
+            van_pain_value=0.15,
+            van_reflection_value=0.2,
+            dan_breath_value=0.2,
+            dan_pending_value=0.15,
+            dan_pain_value=0.1,
             softmax_temperature=2.5,
+            efficiency_weight=0.3,
             fatigue_threshold=0.50,
             transition_thresholds=TransitionThresholds.novice()
         )
@@ -191,10 +297,55 @@ class ActInfParams:
             fpn_collapse_dmn_inc=0.2,
             fpn_base_demand=0.2,
             fpn_focus_mult=2.0,
+            # network/dynamics defaults (may be overridden by config/*.json)
+            network_base=0.1,
+            fpn_to_dan_gain=0.4,
+            hysteresis_strength=0.2,
+            anticorrelation_force=0.25,
+            van_spike=0.5,
+            # surface/modulation defaults (will migrate next)
+            dmn_pending_value=0.15,
+            dmn_reflection_value=0.05,
+            dmn_breath_value=0.2,
+            van_pain_value=0.15,
+            van_reflection_value=0.2,
+            dan_breath_value=0.2,
+            dan_pending_value=0.15,
+            dan_pain_value=0.1,
             softmax_temperature=2.0,   
+            efficiency_weight=0.7,
             fatigue_threshold=0.75,
             transition_thresholds=TransitionThresholds.expert()
         )
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Union[float, Dict]], experience_level: str = 'novice') -> 'ActInfParams':
+        """Create ActInfParams from a flat dictionary (with nested transition_thresholds dict).
+
+        Missing keys are filled from the corresponding `novice()`/`expert()` defaults.
+        """
+        base = cls.expert() if experience_level == 'expert' else cls.novice()
+        base_dict = base.as_dict()
+
+        # Merge provided values
+        merged = base_dict.copy()
+        merged.update(data or {})
+
+        # Build TransitionThresholds object
+        tt = merged.get('transition_thresholds', None)
+        if isinstance(tt, dict):
+            tt_obj = TransitionThresholds(
+                mind_wandering=float(tt.get('mind_wandering', base.transition_thresholds.mind_wandering)),
+                dmn_dan_ratio=float(tt.get('dmn_dan_ratio', base.transition_thresholds.dmn_dan_ratio)),
+                meta_awareness=float(tt.get('meta_awareness', base.transition_thresholds.meta_awareness)),
+                return_focus=float(tt.get('return_focus', base.transition_thresholds.return_focus)),
+            )
+        else:
+            tt_obj = base.transition_thresholds
+
+        merged['transition_thresholds'] = tt_obj
+
+        return cls(**merged)
     
     def as_dict(self) -> Dict[str, Union[float, Dict]]:
         """Convert to dictionary for compatibility with existing code"""
@@ -227,7 +378,21 @@ class ActInfParams:
             'fpn_collapse_dmn_inc': self.fpn_collapse_dmn_inc,
             'fpn_base_demand': self.fpn_base_demand,
             'fpn_focus_mult': self.fpn_focus_mult,
+            'network_base': self.network_base,
+            'fpn_to_dan_gain': self.fpn_to_dan_gain,
+            'hysteresis_strength': self.hysteresis_strength,
+            'anticorrelation_force': self.anticorrelation_force,
+            'van_spike': self.van_spike,
             'softmax_temperature': self.softmax_temperature,
+            'dmn_pending_value': self.dmn_pending_value,
+            'dmn_reflection_value': self.dmn_reflection_value,
+            'dmn_breath_value': self.dmn_breath_value,
+            'van_pain_value': self.van_pain_value,
+            'van_reflection_value': self.van_reflection_value,
+            'dan_breath_value': self.dan_breath_value,
+            'dan_pending_value': self.dan_pending_value,
+            'dan_pain_value': self.dan_pain_value,
+            'efficiency_weight': self.efficiency_weight,
             'fatigue_threshold': self.fatigue_threshold,
             'transition_thresholds': {
                 'mind_wandering': self.transition_thresholds.mind_wandering,
@@ -236,6 +401,7 @@ class ActInfParams:
                 'return_focus': self.transition_thresholds.return_focus
             }
         }
+
 
 # Create the base configurations as module-level constants
 STATE_DWELL_TIMES = {
@@ -286,6 +452,7 @@ DEFAULTS.update({
     'DAN_PAIN_VALUE': 0.1,
  
 })
+ 
 # Network profiles for thoughtseeds and states
 NETWORK_PROFILES = {
     "thoughtseed_contributions": {
@@ -323,6 +490,29 @@ NETWORK_PROFILES = {
         }
     }
 }
+
+# Attempt to override hard-coded constants with files in `config/` when available.
+# This makes runtime behavior configurable without editing Python sources.
+_cfg = _load_config_json('state_dwell_times.json')
+if isinstance(_cfg, dict):
+    try:
+        STATE_DWELL_TIMES = _cfg
+    except Exception:
+        pass
+
+_cfg = _load_config_json('network_profiles.json')
+if isinstance(_cfg, dict):
+    try:
+        NETWORK_PROFILES = _cfg
+    except Exception:
+        pass
+
+_cfg = _load_config_json('defaults_global.json')
+if isinstance(_cfg, dict):
+    try:
+        DEFAULTS.update(_cfg)
+    except Exception:
+        pass
 
 @dataclass
 class ThoughtseedParams:
@@ -403,8 +593,8 @@ class ThoughtseedParams:
         "mind_wandering": {
             "breath_focus": 0.0,
             "equanimity": 0.05,
-            "pain_discomfort": 0.4,   # Positive target: MW expects pain
-            "pending_tasks": 0.4,     # Positive target: MW expects tasks
+            "pain_discomfort": 0.4,
+            "pending_tasks": 0.4,
             "self_reflection": 0.0
         },
         "meta_awareness": {

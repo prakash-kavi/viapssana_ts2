@@ -16,7 +16,7 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 
-from meditation_config import STATES
+from config.meditation_config import STATES
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"

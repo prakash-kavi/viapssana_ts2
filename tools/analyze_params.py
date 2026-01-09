@@ -1,4 +1,4 @@
-import meditation_config as mc
+import config.meditation_config as mc
 from collections import defaultdict
 import numpy as np
 

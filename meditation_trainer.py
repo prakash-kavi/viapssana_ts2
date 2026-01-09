@@ -11,7 +11,7 @@ import logging
 import numpy as np
 
 from meditation_utils import ensure_directories, _save_json_outputs, compute_state_aggregates
-from meditation_config import STATE_DWELL_TIMES, DEFAULTS, ActInfParams, get_actinf_params_dict
+from config.meditation_config import STATE_DWELL_TIMES, DEFAULTS, ActInfParams, get_actinf_params_dict
 
 class Trainer:
     def __init__(self, agent):

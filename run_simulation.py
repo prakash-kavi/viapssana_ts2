@@ -6,7 +6,7 @@ import numpy as np
 from meditation_model import ActInfAgent
 from meditation_utils import ensure_directories
 from meditation_trainer import Trainer
-from meditation_config import DEFAULTS
+from config.meditation_config import DEFAULTS
 
 def run_simulation():
     seed = 42

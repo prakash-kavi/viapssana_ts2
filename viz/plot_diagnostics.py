@@ -20,7 +20,7 @@ from .plotting_utils import (
     PLOT_DIR, TAIL_STEPS, STATE_COLORS, NETWORK_COLORS, 
     STATE_SHORT_NAMES, STATE_DISPLAY_NAMES, THOUGHTSEED_COLORS
 )
-from meditation_config import STATES, THOUGHTSEEDS
+from config.meditation_config import STATES, THOUGHTSEEDS
 
 NETWORKS = ['DMN', 'VAN', 'DAN', 'FPN']
 

@@ -13,10 +13,10 @@ import logging
 from collections import defaultdict
 import copy
 
-from meditation_config import (
+from config.meditation_config import (
     THOUGHTSEEDS, STATES, STATE_DWELL_TIMES,
     get_actinf_params_dict, ActInfParams, ThoughtseedParams, MetacognitionParams,
-    NETWORK_PROFILES, DEFAULTS
+    NETWORK_PROFILES, DEFAULTS, load_actinf_params_from_json
 )
 from meditation_utils import ensure_directories, _save_json_outputs, ou_update, clip_array
 
@@ -46,8 +46,10 @@ class AgentConfig:
         self.dominant_ts_history = []
         self.state_history_over_time = []
         
-        # Instantiate typed per-agent params once and expose as `self.params`
-        self.params = ActInfParams.expert() if experience_level == 'expert' else ActInfParams.novice()
+        # Instantiate typed per-agent params once and expose as `self.params`.
+        # Prefer a JSON-backed profile if available for easier experiment management.
+        config_path = os.path.join(os.path.dirname(__file__), 'config', 'actinf_defaults.json')
+        self.params = load_actinf_params_from_json(config_path, experience_level=experience_level)
         self.noise_level = self.params.noise_level
         
         # Track activation patterns at transition points
@@ -160,8 +162,8 @@ class ActInfAgent(AgentConfig):
         # Get thoughtseed-to-network contribution matrix
         ts_to_network = self.learned_network_profiles["thoughtseed_contributions"]
         
-        # 1. Calculate Base Targets
-        target_acts = {net: DEFAULTS['NETWORK_BASE'] for net in self.networks}
+        # 1. Calculate Base Targets (per-agent values from ActInfParams)
+        target_acts = {net: self.network_base for net in self.networks}
         
         # Bottom-up: Thoughtseeds -> Networks
         for i, ts in enumerate(self.thoughtseeds):
@@ -189,21 +191,21 @@ class ActInfAgent(AgentConfig):
                 focus_error = max(0, 0.9 - current_dan)
                 fpn_demand = self.fpn_base_demand + (self.fpn_focus_mult * focus_error)
 
-                # Experts relax control faster when stable
-                efficiency_weight = DEFAULTS['EFFICIENCY_WEIGHT_EXPERT'] if self.experience_level == 'expert' else DEFAULTS['EFFICIENCY_WEIGHT_NOVICE']
+                # Experts relax control faster when stable (use per-agent param)
+                efficiency_weight = self.efficiency_weight
                 target_acts['FPN'] = (1 - efficiency_weight) * target_acts['FPN'] + efficiency_weight * fpn_demand
 
             # B. FPN Drives DAN + DAN Hysteresis
             # FPN Drive: Top-down recruitment with saturation kinetics
-            target_acts['DAN'] += DEFAULTS['FPN_TO_DAN_GAIN'] * current_fpn * (1.0 - current_dan)
+            target_acts['DAN'] += self.fpn_to_dan_gain * current_fpn * (1.0 - current_dan)
             
             # DAN Hysteresis: Momentum of sustained attention; disrupted by DMN
             current_dmn = self.prev_network_acts.get('DMN', 0)
-            hysteresis_strength = DEFAULTS['HYSTERESIS_EXPERT'] if self.experience_level == 'expert' else DEFAULTS['HYSTERESIS_NOVICE']
+            hysteresis_strength = self.hysteresis_strength
             target_acts['DAN'] += hysteresis_strength * current_dan * (1.0 - current_dmn)
 
         # C. Mutual Inhibition (Task-Positive vs Task-Negative)
-        anticorrelation_force = DEFAULTS['ANTICORRELATION_FORCE']
+        anticorrelation_force = self.anticorrelation_force
         if self.prev_network_acts:
             target_acts['DAN'] -= anticorrelation_force * self.prev_network_acts['DMN'] * target_acts['DAN']
             target_acts['DMN'] -= anticorrelation_force * self.prev_network_acts['DAN'] * target_acts['DMN']
@@ -215,7 +217,7 @@ class ActInfAgent(AgentConfig):
             
             # Fire if threshold crossed (Refractory period via reset)
             if self.dmn_accumulator > DEFAULTS.get('VAN_TRIGGER', 0.7):
-                target_acts['VAN'] += DEFAULTS['VAN_SPIKE']  # Salience spike
+                target_acts['VAN'] += self.van_spike  # Salience spike
                 self.dmn_accumulator = 0.0 # Reset
 
         # D. FPN Accumulator (Cognitive Fatigue)
@@ -357,24 +359,24 @@ class ActInfAgent(AgentConfig):
         # DMN enhances pending_tasks and self_reflection, suppresses breath_focus
         dmn_strength = network_acts.get('DMN', 0)
 
-        modulations['pending_tasks'] += DEFAULTS.get('DMN_PENDING_VALUE', 0.15) * dmn_strength
-        modulations['self_reflection'] += DEFAULTS.get('DMN_REFLECTION_VALUE', 0.05) * dmn_strength
-        modulations['breath_focus'] -= DEFAULTS.get('DMN_BREATH_VALUE', 0.2) * dmn_strength
+        modulations['pending_tasks'] += self.dmn_pending_value * dmn_strength
+        modulations['self_reflection'] += self.dmn_reflection_value * dmn_strength
+        modulations['breath_focus'] -= self.dmn_breath_value * dmn_strength
 
         # VAN enhances pain_discomfort (salience) and self_reflection during meta_awareness
         van_strength = network_acts.get('VAN', 0)
 
-        modulations['pain_discomfort'] += DEFAULTS.get('VAN_PAIN_VALUE', 0.15) * van_strength
+        modulations['pain_discomfort'] += self.van_pain_value * van_strength
 
         if current_state == "meta_awareness":
-            modulations['self_reflection'] += DEFAULTS.get('VAN_REFLECTION_VALUE', 0.2) * van_strength
+            modulations['self_reflection'] += self.van_reflection_value * van_strength
 
         # DAN enhances breath_focus, suppresses distractions
         dan_strength = network_acts.get('DAN', 0)
 
-        modulations['breath_focus'] += DEFAULTS.get('DAN_BREATH_VALUE', 0.2) * dan_strength
-        modulations['pending_tasks'] -= DEFAULTS.get('DAN_PENDING_VALUE', 0.15) * dan_strength
-        modulations['pain_discomfort'] -= DEFAULTS.get('DAN_PAIN_VALUE', 0.1) * dan_strength
+        modulations['breath_focus'] += self.dan_breath_value * dan_strength
+        modulations['pending_tasks'] -= self.dan_pending_value * dan_strength
+        modulations['pain_discomfort'] -= self.dan_pain_value * dan_strength
         
         # FPN enhances self_reflection and equanimity (metacognition and regulation)
         fpn_strength = network_acts.get('FPN', 0)
@@ -388,7 +390,7 @@ class ActInfAgent(AgentConfig):
     def get_transition_probabilities(self, activations, network_acts):
                 # Score and normalize possible next states by similarity to learned profiles
         scores = {}
-        temp = max(1e-6, getattr(self, 'softmax_temperature', 0.5))
+        temp = max(1e-6, self.softmax_temperature)
 
         # Use previous meta-awareness as a proxy (fallback to 0.5)
         meta = getattr(self, 'prev_meta_awareness', 0.5) if getattr(self, 'prev_meta_awareness', None) is not None else 0.5
