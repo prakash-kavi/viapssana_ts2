@@ -80,11 +80,4 @@ python - <<'PY'
 from meditation_model import ActInfAgent
 from meditation_trainer import Trainer
 Trainer(ActInfAgent('novice', timesteps_per_cycle=500)).train(save_outputs=True, output_dir='data/run_500', seed=2026)
-PY
-```
-
----
-
-If you want, I can add a short `docs/` snippet describing `DEFAULTS` and a CI workflow. Would you like that next?
-
 
