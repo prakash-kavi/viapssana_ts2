@@ -13,7 +13,7 @@ def summarize(data):
     n = len(pats)
 
     dmn_vals = [p['network_acts']['DMN'] for p in pats]
-    bf_vals = [p['thoughtseed_activations']['breath_focus'] for p in pats]
+    bf_vals = [p['thoughtseed_activations']['attend_breath'] for p in pats]
     dan_vals = [p['network_acts']['DAN'] for p in pats]
     fpn_vals = [p['network_acts']['FPN'] for p in pats]
 
@@ -56,7 +56,7 @@ def print_summary(name, s):
     print(f"--- {name} ---")
     print(f"n_patterns: {s['n_patterns']}")
     print(f"DMN mean: {s['dmn_mean']:.4f}  (sd {s['dmn_sd']:.4f})")
-    print(f"breath_focus mean: {s['bf_mean']:.4f}  (sd {s['bf_sd']:.4f})")
+    print(f"attend_breath mean: {s['bf_mean']:.4f}  (sd {s['bf_sd']:.4f})")
     for st, info in s['runs_by_state'].items():
         print(f"runs {st}: count={info['count']} mean={info['mean']:.2f} median={info['median']}")
     print(f"recovery (mind_wandering->breath_control): count={s['recovery_count']} mean={s['recovery_mean']}")

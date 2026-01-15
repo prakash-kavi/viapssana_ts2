@@ -13,7 +13,7 @@ import json
 import numpy as np
 
 
-def analyze_last_200_steps(filename, total_steps=1000, window=200):
+def analyze_last_200_steps(filename, total_steps=2000, window=200):
     """
     Analyze state distribution over the last N timesteps.
     
