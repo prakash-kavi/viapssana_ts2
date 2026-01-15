@@ -1,4 +1,119 @@
-﻿# Vipassana-TS2: Thoughtseeds Framework Implementation
+﻿# Vipassana-TS2 — Thoughtseeds Simulation
+
+This repository contains a reference implementation of the Thoughtseeds framework for simulating hierarchical attentional and content dynamics during Vipassana-style meditation. The project is a computational simulation (not an empirical data analysis pipeline).
+
+## Figures
+- [Figure 1 — Mediative Cycle](Mediative_cycle.jpg)
+- [Figure 2 — Conceptual Architecture](Thoughtseeds%20Framework.jpg)
+
+## Conceptual Overview
+
+- Level 1: attentional networks (DMN, VAN, DAN, FPN)
+- Level 2: thoughtseed content dynamics
+- Level 3: meta-cognitive control
+
+The model uses variational-free-energy–style updates and captures qualitative expert/novice differences via parameterized priors and precision settings.
+
+## Mathematical Summary
+
+Below are the core mathematical descriptions used in the simulation. Equations are presented as display math and labelled for reference.
+
+### Layer 1 — Network OU dynamics
+
+The activation of network $k$ (e.g. DMN, VAN, DAN, FPN) follows a stochastic Ornstein–Uhlenbeck process:
+
+$$
+d n_k = \kappa_N\bigl(N_k^*(t) + C_k(N) - n_k\bigr)\,dt + \sigma_N\,dW_k
+$$
+
+(Eq. 1)
+
+Here $\kappa_N$ is a mean-reversion rate, $\sigma_N$ the noise scale, $C_k(N)$ encodes network interactions, and $N_k^*(t)$ is the time-dependent target activation integrating thoughtseed drive and top-down expectations.
+
+### Layer 2 — Thoughtseed dynamics
+
+Low-dimensional thoughtseed variables $z_i$ evolve according to:
+
+$$
+d z_i = \theta_z(s_t)\bigl[(\mu_i(s_t) + \mathcal{M}_{\mathrm{net},i}(N)) - z_i\bigr]\,dt + \sigma_z(s_t)\,dW_i
+$$
+
+(Eq. 2)
+
+Here $\theta_z$ and $\sigma_z$ may depend on the current phenomenological state $s_t$; $\mathcal{M}_{\mathrm{net},i}$ denotes modulatory bias from network activations.
+
+### Layer 3 — Metacognitive VFE objective
+
+The agent minimizes a variational free-energy objective of the form
+
+$$
+F_t = \pi_{\mathrm{sens}} L_{\mathrm{acc}} + \pi_{\mathrm{prior}}\,D_{\mathrm{KL}}\bigl(Q(s) \parallel P(s)\bigr)
+$$
+
+(Eq. 3)
+
+Precision terms are modulated by meta-awareness $M(t)$, for example:
+
+$$
+\pi_{\mathrm{prior}}(t) = (1 + \gamma M(t))(1 + \delta(F_{\mathrm{trend}}))\,\lambda
+$$
+
+(Eq. 4)
+
+Policy failure is accumulated via a leaky integrator:
+
+$$
+A_t = \rho A_{t-1} + \alpha F_t
+$$
+
+(Eq. 5)
+
+When $A_t$ exceeds a threshold $\theta_{\mathrm{crit}}$, candidate next states are scored and sampled. A fused similarity score $S_k$ might take the form
+
+$$
+S_k = \exp\!\left(-\frac{1}{\tau}\left(\lVert N_t - N^{\mathrm{expect}}_k \rVert + \lVert z_t - \mu_k \rVert\right)\right)
+$$
+
+and the selection probability is
+
+$$
+P(s_{t+1}=s_k)=\frac{S_k}{\sum_j S_j}\,.
+$$
+
+(Eqs. 6–7)
+
+## Project Layout (important files)
+
+- `meditation_model.py`: core agent and dynamics
+- `meditation_trainer.py`: experiment runner
+- `meditation_utils.py`: helpers (OU update, I/O, aggregation)
+- `meditation_config.py`: parameter profiles and defaults
+- `run_simulation.py`: top-level script
+- `viz/`: plotting utilities and scripts
+- `data/`, `plots/`: generated JSON and figure outputs
+
+## Reproducibility
+
+- Default random seed: **42** (set in `run_simulation.py`).
+- The `Trainer.train()` method accepts an optional `seed` and `output_dir` to write JSON outputs.
+
+## Quick commands
+
+```bash
+# install
+pip install -r requirements.txt
+
+# run (reproducible)
+python run_simulation.py
+
+# regenerate figures
+python -m viz.plot_attractors
+python -m viz.plot_diagnostics
+python -m viz.plot_convergence
+```
+
+If you want alternative equation numbering or LaTeX-style tags preserved, tell me which format you prefer (numbering inside KaTeX, or plain numbered labels like “(Eq. 1)”).
+# Vipassana-TS2: Thoughtseeds Framework Implementation
 
 This repository contains the reference implementation of the **Thoughtseeds Framework** for modeling Vipassana meditation dynamics.
 
