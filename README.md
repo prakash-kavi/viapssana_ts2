@@ -6,6 +6,9 @@ This is a stochastic simulation using coupled Ornstein–Uhlenbeck dynamics as a
 
 ## Conceptual Overview
 
+![Thoughtseeds Framework](Thoughtseeds%20Framework.jpg)
+![Mediative Cycle](Mediative_cycle.jpg)
+
 - Level 1: attentional networks (DMN, VAN, DAN, FPN)
 - Level 2: thoughtseed dynamics (competing content-level activations)
 - Level 3: meta-cognition (precision modulation and policy switching)
