@@ -15,14 +15,17 @@ def clip_array(x, vmin, vmax):
     return clipped
 
 
-def ou_update(x_prev, mu, theta, sigma, dt=1.0):
-    """Ornstein–Uhlenbeck update (mean reversion + Gaussian noise)."""
+def ou_update(x_prev, mu, theta, sigma, dt=1.0, rng=None):
+    """Ornstein–Uhlenbeck update (mean reversion + Gaussian noise).
+
+    Uses `np.random.RandomState` (agent.rng) for randomness.
+    """
     x_prev_arr = np.asarray(x_prev)
     mu_arr = np.asarray(mu)
-    noise = np.random.normal(0, 1, size=x_prev_arr.shape)
+    rng_to_use = rng if rng is not None else np.random
+    noise = rng_to_use.normal(0, 1, size=x_prev_arr.shape)
     dx = theta * (mu_arr - x_prev_arr) * dt + sigma * noise
     return x_prev_arr + dx
-
 
 def ensure_directories(base_dir=None):
     """Create `data/` and `plots/` under `base_dir` (or package root)."""

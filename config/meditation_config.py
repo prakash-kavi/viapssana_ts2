@@ -77,15 +77,7 @@ class StateTargetActivations:
     pending_tasks: float
     self_reflection: float
     
-    def as_dict(self) -> Dict[str, float]:
-        """Convert to dictionary for compatibility with existing code"""
-        return {
-            "breath_focus": self.breath_focus,
-            "equanimity": self.equanimity,
-            "pain_discomfort": self.pain_discomfort,
-            "pending_tasks": self.pending_tasks,
-            "self_reflection": self.self_reflection
-        }
+    # Instances can be converted to dicts via `dataclasses.asdict` where needed.
 
 @dataclass
 class ActInfParams:
@@ -317,34 +309,34 @@ class ThoughtseedParams:
     
     # Base target activation patterns for each thoughtseed in each state
     BASE_ACTIVATIONS = {
-        "breath_control": StateTargetActivations(
+        "breath_control": asdict(StateTargetActivations(
             breath_focus=0.7,
             equanimity=0.3,
             pain_discomfort=0.15,
             pending_tasks=0.1,
             self_reflection=0.2
-        ).as_dict(),
-        "mind_wandering": StateTargetActivations(
+        )),
+        "mind_wandering": asdict(StateTargetActivations(
             breath_focus=0.1,
             equanimity=0.1,
             pain_discomfort=0.6,
             pending_tasks=0.7,
             self_reflection=0.1
-        ).as_dict(),
-        "meta_awareness": StateTargetActivations(
+        )),
+        "meta_awareness": asdict(StateTargetActivations(
             breath_focus=0.2,
             equanimity=0.3,
             pain_discomfort=0.15,
             pending_tasks=0.15,
             self_reflection=0.8
-        ).as_dict(),
-        "redirect_breath": StateTargetActivations(
+        )),
+        "redirect_breath": asdict(StateTargetActivations(
             breath_focus=0.6,
             equanimity=0.7,
             pain_discomfort=0.2,
             pending_tasks=0.1,
             self_reflection=0.4
-        ).as_dict()
+        ))
     }
     
     # How meta-awareness modulates each thoughtseed in each state

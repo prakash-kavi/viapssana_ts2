@@ -11,7 +11,7 @@ import logging
 import numpy as np
 
 from meditation_utils import ensure_directories, _save_json_outputs, compute_state_aggregates
-from config.meditation_config import STATE_DWELL_TIMES, DEFAULTS, ActInfParams
+from config.meditation_config import STATE_DWELL_TIMES, DEFAULTS
 
 class Trainer:
     def __init__(self, agent):
@@ -26,20 +26,20 @@ class Trainer:
         agent = self.agent
 
         if seed is not None:
-            np.random.seed(seed)
+            # Set agent-local RNG (legacy RandomState) for deterministic runs
+            agent.rng = np.random.RandomState(seed)
 
-        # Initialize training sequence
-        state_sequence = ["breath_control", "mind_wandering", "meta_awareness", "redirect_breath"]
+        # Initialize training sequence (use agent's canonical state list)
+        state_sequence = agent.states
         current_state_index = 0
         current_state = state_sequence[current_state_index]
         current_dwell = 0
         dwell_limit = agent.get_dwell_time(current_state)
 
-        # Initialize activations
-        activations = np.full(agent.num_thoughtseeds, np.random.uniform(0.05, 0.15))
+        # Preserve RNG draw order by keeping the initialization sequence
+        activations = np.full(agent.num_thoughtseeds, agent.rng.uniform(0.05, 0.15))
         activations = agent.get_target_activations(current_state, 0.6)
         prev_activations = activations.copy()
-
         # Track focused state timing
         time_in_focused_state = 0
         state_transition_patterns = []
@@ -71,11 +71,11 @@ class Trainer:
             if hasattr(agent, 'in_transition') and agent.in_transition:
                 # Continue smoothing the transition over multiple timesteps
                 base_blend = agent.blend_factor_transition
-                blend_factor = base_blend * (1.0 + np.random.uniform(-agent.blend_variation, agent.blend_variation))
+                blend_factor = base_blend * (1.0 + agent.rng.uniform(-agent.blend_variation, agent.blend_variation))
 
                 # Add small random perturbations to transition target
                 perturbed_target = agent.transition_target.copy()
-                perturbed_target += np.random.normal(0, agent.transition_perturb_std, size=len(perturbed_target))
+                perturbed_target += agent.rng.normal(0, agent.transition_perturb_std, size=len(perturbed_target))
                 perturbed_target = np.clip(perturbed_target, DEFAULTS['TARGET_CLIP_MIN'], DEFAULTS['TARGET_CLIP_MAX'])
 
                 # Apply blending
@@ -180,7 +180,7 @@ class Trainer:
                 # 3. Sample Next State
                 states = list(probs.keys())
                 probabilities = list(probs.values())
-                next_state = np.random.choice(states, p=probabilities)
+                next_state = agent.rng.choice(states, p=probabilities)
 
                 # 4. Execute Transition
                 transition_happened = True
@@ -196,9 +196,6 @@ class Trainer:
                     free_energy,
                 ))
 
-                agent.transition_counts[current_state][next_state] += 1
-
-                # Update state
                 if next_state in state_sequence:
                     current_state_index = state_sequence.index(next_state)
                 current_state = next_state
@@ -212,18 +209,18 @@ class Trainer:
                 low = agent.transition_variation_low
                 high = agent.transition_variation_high
                 for i in range(len(new_target)):
-                    variation = 1.0 + np.random.uniform(low, high)
+                    variation = 1.0 + agent.rng.uniform(low, high)
                     new_target[i] *= variation
                     new_target[i] = max(DEFAULTS['TARGET_CLIP_MIN'], new_target[i])
 
                 # Blend current state into new state (Smooth Transition)
                 base_blend = agent.blend_factor_state
-                blend_factor = base_blend * (1.0 + np.random.uniform(-agent.blend_variation, agent.blend_variation))
+                blend_factor = base_blend * (1.0 + agent.rng.uniform(-agent.blend_variation, agent.blend_variation))
                 activations = (1 - blend_factor) * activations + blend_factor * new_target
 
                 # Add transition markers
                 agent.in_transition = True
-                agent.transition_counter = DEFAULTS['TRANSITION_COUNTER_BASE'] + np.random.randint(0, DEFAULTS['TRANSITION_COUNTER_RAND'])
+                agent.transition_counter = DEFAULTS['TRANSITION_COUNTER_BASE'] + int(agent.rng.randint(0, DEFAULTS['TRANSITION_COUNTER_RAND']))
                 agent.transition_target = new_target.copy()
 
             if not transition_happened:

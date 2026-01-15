@@ -16,12 +16,18 @@ def run_simulation():
     logging.info("Starting simulation...")
     ensure_directories()
     logging.info("--- Training Novice Model ---")
+    # Use same seed for both agents
+    novice_seed = seed
+
     learner_novice = ActInfAgent(experience_level='novice', timesteps_per_cycle=T)
-    Trainer(learner_novice).train(save_outputs=True, output_dir=out_dir, seed=seed)
+    logging.info("Novice seed: %d", novice_seed)
+    Trainer(learner_novice).train(save_outputs=True, output_dir=out_dir, seed=novice_seed)
 
     logging.info("--- Training Expert Model ---")
+    expert_seed = seed
     learner_expert = ActInfAgent(experience_level='expert', timesteps_per_cycle=T)
-    Trainer(learner_expert).train(save_outputs=True, output_dir=out_dir, seed=seed)
+    logging.info("Expert seed: %d", expert_seed)
+    Trainer(learner_expert).train(save_outputs=True, output_dir=out_dir, seed=expert_seed)
     
     logging.info("Active Inference training completed for both novice and expert models.")
 

@@ -6,18 +6,19 @@ import json
 import logging
 from collections import defaultdict
 import copy
+from typing import Optional
 
 from config.meditation_config import (
     THOUGHTSEEDS, STATES, STATE_DWELL_TIMES,
     ActInfParams, ThoughtseedParams, MetacognitionParams,
     NETWORK_PROFILES, DEFAULTS
 )
-from meditation_utils import ensure_directories, _save_json_outputs, ou_update, clip_array
+from meditation_utils import ou_update, clip_array
 
 class AgentConfig:
     """Base class for thoughtseed dynamics and state handling."""
     
-    def __init__(self, experience_level='novice', timesteps_per_cycle=200):
+    def __init__(self, experience_level='novice', timesteps_per_cycle=200, seed: Optional[int] = None):
         self.experience_level = experience_level
         self.timesteps = timesteps_per_cycle
         self.thoughtseeds = THOUGHTSEEDS
@@ -43,6 +44,9 @@ class AgentConfig:
         for k, v in vars(self.params).items():
             if not hasattr(self, k):
                 setattr(self, k, v)
+
+        # Agent RNG (RandomState); deterministic if seed set.
+        self.rng = np.random.RandomState(seed)
         
         # Track activation patterns at transition points
         self.transition_activations = {state: [] for state in self.states}
@@ -65,12 +69,12 @@ class AgentConfig:
         for i, ts in enumerate(self.thoughtseeds):
             target_activations[i] = targets_dict[ts]
         
-        # Add noise for biological plausibility
-        target_activations += np.random.normal(0, self.noise_level, size=self.num_thoughtseeds)
+        # Add noise using agent RNG
+        target_activations += self.rng.normal(0, self.noise_level, size=self.num_thoughtseeds)
         return np.clip(target_activations, 0.05, 1.0)
 
     def get_dwell_time(self, state):
-        # Random dwell time bounded by STATE_DWELL_TIMES and minimal biological plausibility
+        # Random dwell time (bounded)
         config_min, config_max = STATE_DWELL_TIMES[self.experience_level][state]
         
         # Ensure minimal biological plausibility
@@ -81,7 +85,8 @@ class AgentConfig:
             min_biological = 3
             max_biological = config_max
         
-        return max(min_biological, min(max_biological, np.random.randint(config_min, config_max + 1)))
+        # Use agent RNG
+        return max(min_biological, min(max_biological, int(self.rng.randint(config_min, config_max + 1))))
 
     def get_meta_awareness(self, current_state, activations):
         # Compute meta-awareness from thoughtseed activations and state
@@ -207,14 +212,12 @@ class ActInfAgent(AgentConfig):
                 x_prev = self.prev_network_acts[net]
                 mu = target_acts[net]
 
-                current_acts[net] = float(ou_update(x_prev, mu, theta, sigma, dt))
+                current_acts[net] = float(ou_update(x_prev, mu, theta, sigma, dt, rng=self.rng))
         else:
             # First step initialization
             current_acts = target_acts
             
         # Clip to valid network range
-        from meditation_utils import clip_array
-
         for net in self.networks:
             current_acts[net] = float(clip_array(current_acts[net], DEFAULTS['NETWORK_CLIP_MIN'], DEFAULTS['NETWORK_CLIP_MAX']))
 
@@ -433,8 +436,8 @@ class ActInfAgent(AgentConfig):
                 sigma *= 0.5
                 theta *= 1.5
 
-            # Calculate update using OU helper
-            updated_activations[i] = float(ou_update(x_prev, target, theta, sigma, dt))
+            # OU update using agent RNG
+            updated_activations[i] = float(ou_update(x_prev, target, theta, sigma, dt, rng=self.rng))
             
         from meditation_utils import clip_array
         return clip_array(updated_activations, DEFAULTS['ACTIVATION_CLIP_MIN'], DEFAULTS['ACTIVATION_CLIP_MAX'])

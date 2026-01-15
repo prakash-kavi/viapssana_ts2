@@ -1,26 +1,5 @@
 {
-  "transition_counts": {
-    "breath_control": {
-      "meta_awareness": 5,
-      "mind_wandering": 4,
-      "redirect_breath": 6
-    },
-    "meta_awareness": {
-      "redirect_breath": 11,
-      "mind_wandering": 10,
-      "breath_control": 3
-    },
-    "redirect_breath": {
-      "breath_control": 5,
-      "mind_wandering": 4,
-      "meta_awareness": 12
-    },
-    "mind_wandering": {
-      "redirect_breath": 5,
-      "breath_control": 6,
-      "meta_awareness": 7
-    }
-  },
+  "transition_counts": {},
   "transition_thresholds": {
     "mind_wandering": 0.6,
     "dmn_dan_ratio": 0.5,
