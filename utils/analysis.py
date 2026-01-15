@@ -32,13 +32,7 @@ import config.meditation_config as mc
 from viz import plotting_utils
 from viz.plotting_utils import load_json_data, STATE_DISPLAY_NAMES
 
-# --- 1. Verify Stats Logic ---
-STATE_MAP = {
-    "attend_breath": "Breath Focus",
-    "mind_wandering": "Mind Wandering",
-    "meta_awareness": "Meta-Awareness",
-    "redirect_breath": "Redirected Attention"
-}
+# --- 1. Verify
 NETWORKS = ['DMN', 'VAN', 'DAN', 'FPN']
 
 def run_verification(cohort=None):
@@ -76,8 +70,8 @@ def _calculate_stats(cohort):
         print(f"\n--- {label} Stats ---")
 
         # Free Energy & Network Activations
-        state_fe = {s: [] for s in STATE_MAP}
-        state_net = {s: {n: [] for n in NETWORKS} for s in STATE_MAP}
+        state_fe = {s: [] for s in STATE_DISPLAY_NAMES}
+        state_net = {s: {n: [] for n in NETWORKS} for s in STATE_DISPLAY_NAMES}
 
         for i, state in enumerate(s_hist):
             if state in state_fe:
@@ -86,14 +80,14 @@ def _calculate_stats(cohort):
                     state_net[state][net].append(n_hist[i].get(net, 0.0))
 
         print("[Free Energy & Network Activations]")
-        for state, name in STATE_MAP.items():
+        for state, name in STATE_DISPLAY_NAMES.items():
             fe_vals = state_fe[state]
             avg_fe = np.mean(fe_vals) if fe_vals else 0.0
             net_avgs = [f"{net}: {np.mean(state_net[state][net]):.2f}" if state_net[state][net] else f"{net}: 0.00" for net in NETWORKS]
             print(f"  {name}: FE={avg_fe:.2f} | {', '.join(net_avgs)}")
 
         # Dwell Times
-        dwell_times = {s: [] for s in STATE_MAP}
+        dwell_times = {s: [] for s in STATE_DISPLAY_NAMES}
         if s_hist:
             current_state = s_hist[0]
             current_duration = 0
@@ -109,7 +103,7 @@ def _calculate_stats(cohort):
                 dwell_times[current_state].append(current_duration)
 
         print("[Dwell Times]")
-        for state, name in STATE_MAP.items():
+        for state, name in STATE_DISPLAY_NAMES.items():
             durations = dwell_times[state]
             avg_dur = np.mean(durations) if durations else 0.0
             print(f"  {name}: {avg_dur:.1f} steps (n={len(durations)})")
@@ -162,7 +156,7 @@ def _summarize_trans(data):
     for i, p in enumerate(pats):
         dur = times[0] if i == 0 else times[i] - times[i-1]
         runs.setdefault(p['from'], []).append(dur)
-        if p['from'] == 'mind_wandering' and p['to'] == 'breath_control':
+        if p['from'] == 'mind_wandering' and p['to'] == 'breath_focus':
             recovery.append(dur)
 
     corr = 0.0
