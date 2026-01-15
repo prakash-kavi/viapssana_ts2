@@ -26,7 +26,7 @@ Drawing on Active Inference (Friston et al., 2017) and Global Neuronal Workspace
 
 **Layer 1: High-Dimensional Brain Networks**: This foundational substrate represents the self-organization of neuronal packets into functional superordinate ensembles (Yufik 2019; Ramstead et a1. 2021). It provides the high-dimensional dynamical context for the model, instantiated via four representative attentional networks (DMN, VAN, DAN, FPN) (Yeo et al., 2011) selected for neurobiological grounding and model tractability.
 
-**Layer 2: Low-Dimensional Thoughtseeds Network**: Functioning as a low-dimensional bottleneck, this layer represents the competitive arena of the Global Neuronal Workspace (Mashour et al., 2020). Learned, low-dimensional latent variables, termed ‘thoughtseeds,’ nucleate from Level 1 dynamics through a process of coarse-graining. The dominant thoughtseed is the emergent winner of this competition, achieving agentic causation by exerting top-down constraints that stabilize high-dimensional neural trajectories into coherent attractor states.
+**Layer 2: Low-Dimensional Thoughtseeds Network**: Functioning as a low-dimensional bottleneck akin to Kahneman's System 2 (Kahneman, 2011) and the Global Neuronal Workspace (Mashour et al., 2020), this layer represents the competitive arena of conscious processing. Learned, low-dimensional latent variables, termed ‘thoughtseeds’ (Bengio, 2017), nucleate from Level 1 dynamics through a process of coarse-graining. The dominant thoughtseed is the emergent winner of this competition, achieving agentic causation by exerting top-down constraints that stabilize high-dimensional neural trajectories into coherent attractor states.
 
 **Layer 3: Meta-Cognition**: Monitors agent-level policies on meditative states (BF, MW, MA, RA) (see **Figure 1**) and regulates Level 2 dynamics by modulating precision weighting and meta-awareness. This layer functions as the system's "irreducible Markov blanket" (Ramstead et al., 2023), gating the information bottleneck to align dominant thoughtseeds with meditative goals, providing the top-down gain control necessary for sustained attention and distraction recovery.
 
@@ -52,13 +52,13 @@ $$
 where $\kappa_N$ represents mean-reversion (plasticity), $\sigma_N$ is intrinsic noise, and $C_k(N)$ encodes biologically motivated interactions such as DMN–DAN anticorrelation (Fox et al., 2015) and VAN-triggered salience (Seeley et al., 2007). The target activation $N_k^*(t)$ integrates bottom-up thoughtseed drive with top-down expectations: $N_k^*(t) = \sum W_{ik} z_i(t) + \alpha \mu_k(s_t)$, mapping high-level meditative states (BF, MW, MA, RA) (See **Figure 1**) to their neural manifestations.
 
 #### Layer 2: Thoughtseed Dynamics
-Thoughtseeds ($z_i$) (e.g., *attend_breath*, *pending_tasks*, *pain_discomfort*, *self_reflection*, *equanimity*) are low-dimensional latent variables derived via coarse-graining of the Layer 1 substrate. They function as a "consciousness prior" (Bengio, 2017) that achieves agentic causation by stabilizing high-dimensional neural trajectories. Their evolution follows state-dependent dynamics:
+Thoughtseeds ($z_i$) (e.g., *attend_breath*, *pending_tasks*, *pain_discomfort*, *self_reflection*, *equanimity*) are low-dimensional latent variables derived via coarse-graining of the Layer 1 substrate, acting as a "consciousness prior" (Bengio, 2017). Their evolution follows state-dependent dynamics:
 
 $$
-dz_i = \theta_i(s_t)\big[(\mu_i(s_t) + \beta M_{net,i}(N)) - z_i\big]\,dt + \sigma_i(s_t)\,dW_i \\tag{2}
+dz_i = \theta_z(s_t)\big[(\mu_i(s_t) + \mathcal{M}_{net,i}(N)) - z_i\big]\,dt + \sigma_z(s_t)\,dW_i \\tag{2}
 $$
 
-where $\mu_i$ are state targets, $M_{net,i}$ is the modulatory bias from current network activations, and $\theta_i, \sigma_i$ vary with the phenomenological state (e.g., increased persistence during sustained focus).
+where $\mu_i$ are state targets, $\mathcal{M}_{net,i}$ is the modulatory bias from current network activations, and $\theta_z, \sigma_z$ vary with the phenomenological state (e.g., increased persistence during sustained focus).
 
 #### Layer 3: Metacognitive Regulation and VFE
 The agent minimizes a VFE objective ($F_t$) that balances sensory accuracy against model parsimony:
