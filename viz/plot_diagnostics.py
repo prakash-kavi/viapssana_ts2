@@ -60,6 +60,10 @@ def plot_hierarchy(data, save_path=None):
     ax1.set_title('Level 3: Metacognition', fontsize=14, fontweight='bold')
     ax1.set_ylim(0, 1.05)
     ax1.grid(True, axis='y', linestyle='--', alpha=0.5)
+    # Remove axis borders/spines for a cleaner look
+    for spine in ax1.spines.values():
+        spine.set_visible(False)
+    ax1.patch.set_visible(False)
     
     # 2. Level 2: Dominant Thoughtseed
     ax2 = fig.add_subplot(gs[1], sharex=ax1)
@@ -89,6 +93,10 @@ def plot_hierarchy(data, save_path=None):
     ax2.set_ylabel('Dominant Thoughtseed', fontsize=12)
     ax2.set_title('Level 2: Dominant Thoughtseed', fontsize=14, fontweight='bold', pad=-15)
     ax2.grid(True, axis='y', linestyle='--', alpha=0.5)
+    # Remove axis borders/spines for consistency
+    for spine in ax2.spines.values():
+        spine.set_visible(False)
+    ax2.patch.set_visible(False)
     
     # 3. Level 1: Network Activations
     ax3 = fig.add_subplot(gs[2], sharex=ax1)
@@ -132,7 +140,7 @@ def plot_hierarchy(data, save_path=None):
     
     # Create a separate legend for state abbreviations below the plot
     state_legend = fig.legend(handles=state_legend_elements, loc='lower center', 
-                            fontsize=10, frameon=True, ncol=4, bbox_to_anchor=(0.5, 0.01))
+                            fontsize=10, frameon=False, ncol=4, bbox_to_anchor=(0.5, 0.01))
     
     ax3.set_xlabel('Timestep', fontsize=12)
     ax3.set_ylabel('Network Activation', fontsize=12)
@@ -141,7 +149,7 @@ def plot_hierarchy(data, save_path=None):
     ax3.grid(True, linestyle='--', alpha=0.5)
     
     # Create a more elegant legend
-    ax3.legend(loc='upper right', framealpha=0.9, fancybox=True, fontsize=10)
+    ax3.legend(loc='upper right', frameon=False, fancybox=False, fontsize=10)
     
     # Add overall title
     experience = data.get('experience_level', 'default')
