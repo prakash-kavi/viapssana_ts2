@@ -58,12 +58,6 @@ Generated outputs appear under `data/` (JSON) and `plots/` (PNGs).
 - Default numeric constants and thresholds are centralized in `meditation_config.DEFAULTS` for maintainability.
 - JSON outputs include `transition_stats_<level>.json`, `thoughtseed_params_<level>.json`, and `active_inference_params_<level>.json`.
 
-## Developer Notes
-
-- Code style: run `black`/`isort` and `ruff` for formatting and linting.
-- Key refactors already applied: training extracted to `meditation_trainer.py`, OU helper `ou_update` moved to `meditation_utils.py`, and `DEFAULTS` centralized in `meditation_config.py`.
-- Suggested next steps for publication readiness: add minimal CI (import + smoke run), pin versions in `requirements.txt`, and add a short regression check comparing summary statistics to a baseline.
-
 ## Useful Commands
 
 ```bash
