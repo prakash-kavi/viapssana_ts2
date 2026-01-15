@@ -45,9 +45,8 @@ class AgentConfig:
             if not hasattr(self, k):
                 setattr(self, k, v)
 
-        # Agent RNG (RandomState); deterministic if seed set.
+        # Agent RNG (RandomState)
         self.rng = np.random.RandomState(seed)
-        
         # Track activation patterns at transition points
         self.transition_activations = {state: [] for state in self.states}
         
@@ -69,12 +68,12 @@ class AgentConfig:
         for i, ts in enumerate(self.thoughtseeds):
             target_activations[i] = targets_dict[ts]
         
-        # Add noise using agent RNG
+        # Uses agent RNG
         target_activations += self.rng.normal(0, self.noise_level, size=self.num_thoughtseeds)
         return np.clip(target_activations, 0.05, 1.0)
 
     def get_dwell_time(self, state):
-        # Random dwell time (bounded)
+        # Random dwell time
         config_min, config_max = STATE_DWELL_TIMES[self.experience_level][state]
         
         # Ensure minimal biological plausibility
@@ -85,7 +84,7 @@ class AgentConfig:
             min_biological = 3
             max_biological = config_max
         
-        # Use agent RNG
+        # Uses agent RNG
         return max(min_biological, min(max_biological, int(self.rng.randint(config_min, config_max + 1))))
 
     def get_meta_awareness(self, current_state, activations):
@@ -97,7 +96,6 @@ class AgentConfig:
             thoughtseed_activations=activations_dict,
             experience_level=self.experience_level
         )
-
 
 class ActInfAgent(AgentConfig):
     """Active Inference agent: networks, thoughtseeds, metacognition."""

@@ -29,7 +29,6 @@ STATE_SHORT = pu.STATE_SHORT_NAMES
 TS_BF = THOUGHTSEEDS.index("breath_focus")
 TS_PT = THOUGHTSEEDS.index("pending_tasks")
 
-
 def _load_cohort_series(cohort: str, tail: int | None = 200) -> Dict[str, np.ndarray]:
     ts_data, _, stats_data = pu.load_json_data(cohort)
     
@@ -41,9 +40,6 @@ def _load_cohort_series(cohort: str, tail: int | None = 200) -> Dict[str, np.nda
     states = tail_stats.get("state_history", [])
     
     if activations.ndim != 2 or activations.shape[0] == 0:
-        # Fallback: if stats_data is empty, try to construct from ts_data if possible, 
-        # but load_json_data should have handled it.
-        # If it's still empty, it's an error.
         raise ValueError(f"Activation history missing or malformed for {cohort}")
 
     return {
@@ -53,7 +49,6 @@ def _load_cohort_series(cohort: str, tail: int | None = 200) -> Dict[str, np.nda
         "states": states,
         "activation_means": ts_data.get("activation_means_by_state", {}),
     }
-
 
 def _state_centroids(
     activations: np.ndarray,
@@ -74,7 +69,6 @@ def _state_centroids(
             ])
     return centroids
 
-
 def _smooth_path(series: np.ndarray, kernel: np.ndarray | None = None) -> np.ndarray:
     if series.size < 3:
         return series.copy()
@@ -85,7 +79,6 @@ def _smooth_path(series: np.ndarray, kernel: np.ndarray | None = None) -> np.nda
     padded = np.pad(series, pad_width=pad, mode="edge")
     smoothed = np.convolve(padded, kernel, mode="valid")
     return smoothed.astype(float)
-
 
 def plot_attractor_2d(
     novice: Dict[str, np.ndarray],
@@ -179,7 +172,6 @@ def plot_attractor_2d(
     fig.savefig(out_path, dpi=300, bbox_inches="tight")
     plt.close(fig)
 
-
 def _kernel_surface(
     x: np.ndarray,
     y: np.ndarray,
@@ -209,7 +201,6 @@ def _kernel_surface(
     surface = (weighted / normaliser).reshape(grid_x.shape)
     z_min, z_max = float(np.nanmin(z)), float(np.nanmax(z))
     return np.clip(surface, z_min, z_max)
-
 
 def plot_attractor_landscape_3d(
     novice: Dict[str, np.ndarray],
@@ -350,7 +341,6 @@ def plot_attractor_landscape_3d(
     fig.savefig(out_path, dpi=300, bbox_inches="tight")
     plt.close(fig)
 
-
 def generate_plots(tail: int | None = 200) -> None:
     novice = _load_cohort_series("novice", tail=tail)
     expert = _load_cohort_series("expert", tail=tail)
@@ -371,7 +361,6 @@ def generate_plots(tail: int | None = 200) -> None:
     except Exception:
         rel = str(pu.PLOT_DIR)
     logging.info("Saved attractor plots to %s", rel)
-
 
 if __name__ == "__main__":
     generate_plots()

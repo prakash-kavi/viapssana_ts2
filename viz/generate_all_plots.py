@@ -10,14 +10,12 @@ import logging
 from . import plotting_utils as pu
 from . import plot_diagnostics as pd
 
-
 def main():
     os.makedirs(pu.PLOT_DIR, exist_ok=True)
 
-    # Convergence and attractor modules have their own __main__ entrypoints
-    # but we call diagnostics directly here. Use tail-windowed stats for
-    # time-series/hierarchy plots (visibility) and full stats for aggregate
-    # distributions (FE bars, dwell times). Convergence plots use full series.
+    # Use tail-windowed stats(last 200 timesteps) for
+    # time-series/hierarchy plots and full stats for aggregate
+    # distributions (FE bars, dwell times). Convergence plots use full series(1000 timesteps).
     nov_ts, nov_ai, nov_stats = pu.load_json_data('novice')
     exp_ts, exp_ai, exp_stats = pu.load_json_data('expert')
 
@@ -38,7 +36,6 @@ def main():
     pd.plot_dwell_times(nov_stats, exp_stats, save_path=os.path.join(pu.PLOT_DIR, 'Fig3C_Dwell.png'))
 
     logging.info("Saved diagnostic plots to %s", pu.PLOT_DIR)
-
 
 if __name__ == '__main__':
     main()

@@ -26,9 +26,8 @@ class Trainer:
         agent = self.agent
 
         if seed is not None:
-            # Set agent-local RNG (legacy RandomState) for deterministic runs
+            # Set agent RNG (RandomState)
             agent.rng = np.random.RandomState(seed)
-
         # Initialize training sequence (use agent's canonical state list)
         state_sequence = agent.states
         current_state_index = 0
@@ -36,7 +35,7 @@ class Trainer:
         current_dwell = 0
         dwell_limit = agent.get_dwell_time(current_state)
 
-        # Preserve RNG draw order by keeping the initialization sequence
+        # Preserve RNG draw order
         activations = np.full(agent.num_thoughtseeds, agent.rng.uniform(0.05, 0.15))
         activations = agent.get_target_activations(current_state, 0.6)
         prev_activations = activations.copy()
@@ -73,7 +72,7 @@ class Trainer:
                 base_blend = agent.blend_factor_transition
                 blend_factor = base_blend * (1.0 + agent.rng.uniform(-agent.blend_variation, agent.blend_variation))
 
-                # Add small random perturbations to transition target
+                # Small perturbations (agent RNG)
                 perturbed_target = agent.transition_target.copy()
                 perturbed_target += agent.rng.normal(0, agent.transition_perturb_std, size=len(perturbed_target))
                 perturbed_target = np.clip(perturbed_target, DEFAULTS['TARGET_CLIP_MIN'], DEFAULTS['TARGET_CLIP_MAX'])
