@@ -26,7 +26,7 @@ from . import plotting_utils as pu
 STATE_COLORS = pu.STATE_COLORS
 STATE_SHORT = pu.STATE_SHORT_NAMES
 
-TS_BF = THOUGHTSEEDS.index("breath_focus")
+TS_BF = THOUGHTSEEDS.index("attend_breath")
 TS_PT = THOUGHTSEEDS.index("pending_tasks")
 
 def _load_cohort_series(cohort: str, tail: int | None = 200) -> Dict[str, np.ndarray]:
@@ -64,7 +64,7 @@ def _state_centroids(
         elif state in means_by_state:
             means = means_by_state[state]
             centroids[state] = np.array([
-                float(means.get("breath_focus", 0.5)),
+                float(means.get("attend_breath", 0.5)),
                 float(means.get("pending_tasks", 0.5)),
             ])
     return centroids

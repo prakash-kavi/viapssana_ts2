@@ -19,7 +19,7 @@ from viz.plotting_utils import load_json_data, STATE_DISPLAY_NAMES
 
 # State name mappings
 STATE_MAP = {
-    "breath_control": "Breath Focus",
+    "attend_breath": "Breath Focus",
     "mind_wandering": "Mind Wandering",
     "meta_awareness": "Meta-Awareness",
     "redirect_breath": "Redirected Attention"

@@ -8,8 +8,8 @@ from dataclasses import dataclass, field, asdict
 from typing import Dict, List, Tuple, Optional, Union
 import numpy as np
 
-# Core thoughtseed and state definitions
-THOUGHTSEEDS = ['breath_focus', 'pain_discomfort', 'pending_tasks', 'self_reflection', 'equanimity']
+# Core thoughtseed and mediative state definitions
+THOUGHTSEEDS = ['attend_breath', 'pain_discomfort', 'pending_tasks', 'self_reflection', 'equanimity']
 STATES = ['breath_control', 'mind_wandering', 'meta_awareness', 'redirect_breath']
 
 @dataclass
@@ -71,7 +71,7 @@ class TransitionThresholds:
 
 @dataclass
 class StateTargetActivations:
-    breath_focus: float
+    attend_breath: float
     equanimity: float
     pain_discomfort: float
     pending_tasks: float
@@ -132,7 +132,20 @@ class ActInfParams:
     softmax_temperature: float
     fatigue_threshold: float
     transition_thresholds: TransitionThresholds
+    # VFE Precision Parameters
+    sensory_precision_base: float
+    sensory_precision_van_scalar: float
+    prior_precision_base: float
+    prior_precision_meta_scalar: float
     
+    # Learning Rate Precision
+    learning_precision_base: float
+    learning_precision_scalar: float
+
+    # Network Targets & modulation
+    dan_focus_target: float
+    expert_meta_scalar: float
+
     @classmethod
     def novice(cls) -> 'ActInfParams':
         return cls(
@@ -182,7 +195,16 @@ class ActInfParams:
             softmax_temperature=2.5,
             efficiency_weight=0.3,
             fatigue_threshold=0.50,
-            transition_thresholds=TransitionThresholds.novice()
+            transition_thresholds=TransitionThresholds.novice(),
+            # Newly extracted magic numbers
+            sensory_precision_base=0.1,
+            sensory_precision_van_scalar=5.0,
+            prior_precision_base=1.0,
+            prior_precision_meta_scalar=3.0,
+            dan_focus_target=0.9,
+            expert_meta_scalar=1.0, # Novice default
+            learning_precision_base=1.0,
+            learning_precision_scalar=2.0
         )
     
     @classmethod
@@ -234,12 +256,21 @@ class ActInfParams:
             softmax_temperature=2.0,   
             efficiency_weight=0.7,
             fatigue_threshold=0.75,
-            transition_thresholds=TransitionThresholds.expert()
+            transition_thresholds=TransitionThresholds.expert(),
+            # Newly extracted magic numbers
+            sensory_precision_base=0.1,
+            sensory_precision_van_scalar=5.0,
+            prior_precision_base=1.0,
+            prior_precision_meta_scalar=3.0,
+            dan_focus_target=0.9,
+            expert_meta_scalar=1.05,
+            learning_precision_base=1.0,
+            learning_precision_scalar=5.0
         )
 
 # Create the base configurations as module-level constants
 STATE_DWELL_TIMES = {
-    # Per-experience-level dwell time ranges (min, max) for each state
+    # Per-experience-level dwell time ranges (min, max) for each mediative state
     'novice': DwellTimeConfig.novice().__dict__,
     'expert': DwellTimeConfig.expert().__dict__
 }
@@ -265,18 +296,18 @@ DEFAULTS.update({
     'TRANSITION_COUNTER_RAND': 2,
 })
 
-# Network profiles for thoughtseeds and states
+# Network profiles for thoughtseeds and mediative states
 NETWORK_PROFILES = {
     "thoughtseed_contributions": {
-        "breath_focus": NetworkProfile(DMN=0.2, VAN=0.3, DAN=0.65, FPN=0.6).__dict__,
+        "attend_breath": NetworkProfile(DMN=0.2, VAN=0.3, DAN=0.65, FPN=0.6).__dict__,
         "pain_discomfort": NetworkProfile(DMN=0.5, VAN=0.7, DAN=0.3, FPN=0.4).__dict__,
         "pending_tasks": NetworkProfile(DMN=0.8, VAN=0.5, DAN=0.2, FPN=0.4).__dict__,
         "self_reflection": NetworkProfile(DMN=0.6, VAN=0.4, DAN=0.3, FPN=0.8).__dict__,
         "equanimity": NetworkProfile(DMN=0.3, VAN=0.3, DAN=0.5, FPN=0.9).__dict__
     },
     
-    # State profiles differentiated by experience level
-    # Expected network activations per high-level state and experience level
+    # Mediative state profiles differentiated by experience level
+    # Expected network activations per high-level mediative state and experience level
     "state_expected_profiles": {
         # BREATH CONTROL: Experts have lower DMN, higher DAN/FPN
         "breath_control": {
@@ -307,31 +338,31 @@ NETWORK_PROFILES = {
 @dataclass
 class ThoughtseedParams:
     
-    # Base target activation patterns for each thoughtseed in each state
+    # Base target activation patterns for each thoughtseed in each mediative state
     BASE_ACTIVATIONS = {
         "breath_control": asdict(StateTargetActivations(
-            breath_focus=0.7,
+            attend_breath=0.7,
             equanimity=0.3,
             pain_discomfort=0.15,
             pending_tasks=0.1,
             self_reflection=0.2
         )),
         "mind_wandering": asdict(StateTargetActivations(
-            breath_focus=0.1,
+            attend_breath=0.1,
             equanimity=0.1,
             pain_discomfort=0.6,
             pending_tasks=0.7,
             self_reflection=0.1
         )),
         "meta_awareness": asdict(StateTargetActivations(
-            breath_focus=0.2,
+            attend_breath=0.2,
             equanimity=0.3,
             pain_discomfort=0.15,
             pending_tasks=0.15,
             self_reflection=0.8
         )),
         "redirect_breath": asdict(StateTargetActivations(
-            breath_focus=0.6,
+            attend_breath=0.6,
             equanimity=0.7,
             pain_discomfort=0.2,
             pending_tasks=0.1,
@@ -339,31 +370,31 @@ class ThoughtseedParams:
         ))
     }
     
-    # How meta-awareness modulates each thoughtseed in each state
+    # How meta-awareness modulates each thoughtseed in each mediative state
     META_AWARENESS_MODULATORS = {
         "breath_control": {
-            "breath_focus": 0.1,
+            "attend_breath": 0.1,
             "equanimity": 0.25,
             "pain_discomfort": 0.0,
             "pending_tasks": 0.0,
             "self_reflection": 0.1
         },
         "mind_wandering": {
-            "breath_focus": 0.0,
+            "attend_breath": 0.0,
             "equanimity": -0.05,
             "pain_discomfort": -0.1,
             "pending_tasks": -0.1,
             "self_reflection": 0.3
         },
         "meta_awareness": {
-            "breath_focus": 0.1,
+            "attend_breath": 0.1,
             "equanimity": 0.1,
             "pain_discomfort": 0.0,
             "pending_tasks": 0.0,
             "self_reflection": 0.1
         },
         "redirect_breath": {
-            "breath_focus": 0.2,
+            "attend_breath": 0.2,
             "equanimity": 0.25,
             "pain_discomfort": -0.1,
             "pending_tasks": 0.0,
@@ -374,28 +405,28 @@ class ThoughtseedParams:
     # Experience-specific adjustments (values to add for experts)
     EXPERT_ADJUSTMENTS = {
         "breath_control": {
-            "breath_focus": 0.1,
+            "attend_breath": 0.1,
             "equanimity": 0.2,
             "pain_discomfort": 0.0,
             "pending_tasks": 0.0,
             "self_reflection": 0.0
         },
         "mind_wandering": {
-            "breath_focus": 0.0,
+            "attend_breath": 0.0,
             "equanimity": 0.05,
             "pain_discomfort": 0.4,
             "pending_tasks": 0.4,
             "self_reflection": 0.0
         },
         "meta_awareness": {
-            "breath_focus": 0.0,
+            "attend_breath": 0.0,
             "equanimity": 0.1,
             "pain_discomfort": 0.0,
             "pending_tasks": 0.0,
             "self_reflection": 0.1
         },
         "redirect_breath": {
-            "breath_focus": 0.0,
+            "attend_breath": 0.0,
             "equanimity": 0.2,
             "pain_discomfort": 0.0,
             "pending_tasks": 0.0,
@@ -405,8 +436,8 @@ class ThoughtseedParams:
     
     @staticmethod
     def get_target_activations(state, meta_awareness, experience_level='novice'):
-        """Get target activation values for each thoughtseed in the specified state."""
-        # Start with base activations for this state
+        """Get target activation values for each thoughtseed in the specified mediative state."""
+        # Start with base activations for this mediative state
         activations = ThoughtseedParams.BASE_ACTIVATIONS[state].copy()
         
         # Apply meta-awareness modulation
@@ -424,7 +455,7 @@ class ThoughtseedParams:
 @dataclass
 class MetacognitionParams:
     
-    # Base meta-awareness levels for each state
+    # Base meta-awareness levels for each mediative state
     BASE_AWARENESS = {
         "breath_control": 0.4,
         "mind_wandering": 0.2,
@@ -440,8 +471,8 @@ class MetacognitionParams:
     
     @staticmethod
     def calculate_meta_awareness(state, thoughtseed_activations, experience_level='novice'):
-        """Compute meta-awareness from state and thoughtseed activations."""
-        # Get base awareness for this state
+        """Compute meta-awareness from mediative state and thoughtseed activations."""
+        # Get base awareness for this mediative state
         base_awareness = MetacognitionParams.BASE_AWARENESS[state]
         
         # Calculate thoughtseed influence

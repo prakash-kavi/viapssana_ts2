@@ -43,7 +43,7 @@ NETWORK_COLORS = {
 }
 
 THOUGHTSEED_COLORS = {
-    'breath_focus': '#f58231',
+    'attend_breath': '#f58231',
     'equanimity': '#3cb44b',
     'self_reflection': '#4363d8',
     'pain_discomfort': '#e6194B',
