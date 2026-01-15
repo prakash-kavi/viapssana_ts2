@@ -4,10 +4,12 @@ This repository contains the reference implementation of the **Thoughtseeds Fram
 
 This is a stochastic simulation using coupled Ornstein–Uhlenbeck dynamics as an initial Active Inference formulation, serving as a scaffold for future full Active Inference implementations. It is a computational simulation and does not do emprical data fitting or neuromimaging data analysis.
 
+![Mediative Cycle](Mediative_cycle.jpg)
+
 ## Conceptual Overview
 
 ![Thoughtseeds Framework](Thoughtseeds%20Framework.jpg)
-![Mediative Cycle](Mediative_cycle.jpg)
+
 
 - Level 1: attentional networks (DMN, VAN, DAN, FPN)
 - Level 2: thoughtseed dynamics (competing content-level activations)
