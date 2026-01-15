@@ -234,27 +234,25 @@ def run_params():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Meditation Simulation Analysis")
-    subparsers = parser.add_subparsers(dest="command", help="Analysis Command")
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "verify"
+    args = sys.argv[2:] if len(sys.argv) > 2 else []
 
-    # Subcommands
-    verify_parser = subparsers.add_parser("verify", help="Verify statistics (tail window)")
-    verify_parser.add_argument("cohort", nargs="?", choices=["novice", "expert"], help="Cohort to verify")
-    
-    subparsers.add_parser("compare", help="Compare transition statistics")
-    subparsers.add_parser("steady_state", help="Analyze convergence")
-    subparsers.add_parser("params", help="Analyze config parameters")
-
-    args = parser.parse_args()
-
-    # Default to verify if no command provided
-    if args.command is None:
-        run_verification()
-    elif args.command == "verify":
-        run_verification(args.cohort)
-    elif args.command == "compare":
+    if cmd == "verify":
+        cohort = args[0] if args else None
+        if cohort and cohort not in ["novice", "expert"]:
+            print(f"Unknown cohort: {cohort}")
+        else:
+            run_verification(cohort)
+    elif cmd == "compare":
         run_comparison()
-    elif args.command == "steady_state":
+    elif cmd == "steady_state":
         run_steady_state()
-    elif args.command == "params":
+    elif cmd == "params":
         run_params()
+    else:
+        # If the first arg isn't a known command, treat it as a cohort for verification
+        if cmd in ["novice", "expert"]:
+            run_verification(cmd)
+        else:
+            print(f"Unknown command: {cmd}")
+            print("Usage: python -m utils.analysis [verify|compare|steady_state|params] [novice|expert]")
