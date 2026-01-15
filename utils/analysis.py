@@ -234,25 +234,24 @@ def run_params():
 
 
 if __name__ == "__main__":
-    cmd = sys.argv[1] if len(sys.argv) > 1 else "verify"
-    args = sys.argv[2:] if len(sys.argv) > 2 else []
+    print("=== Vipassana Simulation Analysis ===\n")
+    
+    # 1. Verification (Novice & Expert)
+    print(">>> 1. VERIFICATION STATS")
+    run_verification()
+    print("\n")
 
-    if cmd == "verify":
-        cohort = args[0] if args else None
-        if cohort and cohort not in ["novice", "expert"]:
-            print(f"Unknown cohort: {cohort}")
-        else:
-            run_verification(cohort)
-    elif cmd == "compare":
-        run_comparison()
-    elif cmd == "steady_state":
-        run_steady_state()
-    elif cmd == "params":
-        run_params()
-    else:
-        # If the first arg isn't a known command, treat it as a cohort for verification
-        if cmd in ["novice", "expert"]:
-            run_verification(cmd)
-        else:
-            print(f"Unknown command: {cmd}")
-            print("Usage: python -m utils.analysis [verify|compare|steady_state|params] [novice|expert]")
+    # 2. Comparison
+    print(">>> 2. TRANSITION COMPARISON")
+    run_comparison()
+    print("\n")
+
+    # 3. Steady State
+    print(">>> 3. STEADY STATE CONVERGENCE")
+    run_steady_state()
+    print("\n")
+
+    # 4. Parameters
+    print(">>> 4. PARAMETER CHECKS")
+    run_params()
+    print("\n")
