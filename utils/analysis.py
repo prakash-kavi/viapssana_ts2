@@ -2,17 +2,7 @@
 analysis.py
 
 Unified analysis utility for the Vipassana Meditation Model.
-Combines functionality from previously separate scripts:
-- verify_stats.py
-- compare_transition_stats.py
-- analyze_steady_state.py
-- analyze_params.py
-
-Usage:
-    python -m utils.analysis verify [novice|expert]
-    python -m utils.analysis compare
-    python -m utils.analysis steady_state
-    python -m utils.analysis params
+Provides verification, comparison, and steady-state analysis tools.
 """
 
 import sys
@@ -244,25 +234,23 @@ def run_params():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Meditation Simulation Analysis Utility")
+    parser = argparse.ArgumentParser(description="Meditation Simulation Analysis")
     subparsers = parser.add_subparsers(dest="command", help="Analysis Command")
 
-    # verify
+    # Subcommands
     verify_parser = subparsers.add_parser("verify", help="Verify statistics (tail window)")
     verify_parser.add_argument("cohort", nargs="?", choices=["novice", "expert"], help="Cohort to verify")
-
-    # compare
+    
     subparsers.add_parser("compare", help="Compare transition statistics")
-
-    # steady_state
     subparsers.add_parser("steady_state", help="Analyze convergence")
-
-    # params
     subparsers.add_parser("params", help="Analyze config parameters")
 
     args = parser.parse_args()
 
-    if args.command == "verify":
+    # Default to verify if no command provided
+    if args.command is None:
+        run_verification()
+    elif args.command == "verify":
         run_verification(args.cohort)
     elif args.command == "compare":
         run_comparison()
@@ -270,5 +258,3 @@ if __name__ == "__main__":
         run_steady_state()
     elif args.command == "params":
         run_params()
-    else:
-        parser.print_help()
