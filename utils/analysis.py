@@ -209,7 +209,6 @@ def _analyze_last_steps(filename, total_steps, window):
     for state, count in counts.items():
         print(f"  {state:<20}: {count:<5} ({count/total:.2%})")
 
-
 # --- 4. Params Analysis Logic ---
 def run_params():
     print("--- Config Parameter Analysis ---")
@@ -231,7 +230,6 @@ def run_params():
         a, b = np.linalg.lstsq(A, expert, rcond=None)[0]
         resid = np.linalg.norm(expert - (a * novice + b))
         print(f"{state}: a={a:.3f}, b={b:.3f}, resid={resid:.4f}")
-
 
 if __name__ == "__main__":
     print("=== Vipassana Simulation Analysis ===\n")

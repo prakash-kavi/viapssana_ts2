@@ -10,11 +10,11 @@ import numpy as np
 
 # Core thoughtseed and mediative state definitions
 THOUGHTSEEDS = ['attend_breath', 'pain_discomfort', 'pending_tasks', 'self_reflection', 'equanimity']
-STATES = ['breath_control', 'mind_wandering', 'meta_awareness', 'redirect_breath']
+STATES = ['breath_focus', 'mind_wandering', 'meta_awareness', 'redirect_breath']
 
 @dataclass
 class DwellTimeConfig:
-    breath_control: Tuple[int, int]
+    breath_focus: Tuple[int, int]
     mind_wandering: Tuple[int, int]
     meta_awareness: Tuple[int, int]
     redirect_breath: Tuple[int, int]
@@ -22,7 +22,7 @@ class DwellTimeConfig:
     @classmethod
     def novice(cls) -> 'DwellTimeConfig':
         return cls(
-            breath_control=(5, 15),
+            breath_focus=(5, 15),
             mind_wandering=(22, 42),
             meta_awareness=(2, 7),
             redirect_breath=(2, 5)
@@ -31,7 +31,7 @@ class DwellTimeConfig:
     @classmethod
     def expert(cls) -> 'DwellTimeConfig':
         return cls(
-            breath_control=(15, 25),
+            breath_focus=(15, 25),
             mind_wandering=(8, 12),
             meta_awareness=(2, 4),
             redirect_breath=(2, 4)
@@ -310,7 +310,7 @@ NETWORK_PROFILES = {
     # Expected network activations per high-level mediative state and experience level
     "state_expected_profiles": {
         # BREATH CONTROL: Experts have lower DMN, higher DAN/FPN
-        "breath_control": {
+        "breath_focus": {
             "novice": NetworkProfile(DMN=0.35, VAN=0.4, DAN=0.7, FPN=0.5).__dict__,
             "expert": NetworkProfile(DMN=0.24, VAN=0.42, DAN=0.68, FPN=0.65).__dict__
         },
@@ -340,7 +340,7 @@ class ThoughtseedParams:
     
     # Base target activation patterns for each thoughtseed in each mediative state
     BASE_ACTIVATIONS = {
-        "breath_control": asdict(StateTargetActivations(
+        "breath_focus": asdict(StateTargetActivations(
             attend_breath=0.7,
             equanimity=0.3,
             pain_discomfort=0.15,
@@ -372,7 +372,7 @@ class ThoughtseedParams:
     
     # How meta-awareness modulates each thoughtseed in each mediative state
     META_AWARENESS_MODULATORS = {
-        "breath_control": {
+        "breath_focus": {
             "attend_breath": 0.1,
             "equanimity": 0.25,
             "pain_discomfort": 0.0,
@@ -404,7 +404,7 @@ class ThoughtseedParams:
     
     # Experience-specific adjustments (values to add for experts)
     EXPERT_ADJUSTMENTS = {
-        "breath_control": {
+        "breath_focus": {
             "attend_breath": 0.1,
             "equanimity": 0.2,
             "pain_discomfort": 0.0,
@@ -457,7 +457,7 @@ class MetacognitionParams:
     
     # Base meta-awareness levels for each mediative state
     BASE_AWARENESS = {
-        "breath_control": 0.4,
+        "breath_focus": 0.4,
         "mind_wandering": 0.2,
         "meta_awareness": 0.6,
         "redirect_breath": 0.5

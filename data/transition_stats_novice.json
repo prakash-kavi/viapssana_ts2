@@ -161,7 +161,7 @@
   ],
   "state_transition_patterns": [
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "redirect_breath",
       "thoughtseed_activations": {
         "attend_breath": 0.6449205601812409,
@@ -234,7 +234,7 @@
     },
     {
       "from": "redirect_breath",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.6948780788239016,
         "pain_discomfort": 0.41364638820186345,
@@ -251,7 +251,7 @@
       "free_energy": 1.2360277397839057
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "meta_awareness",
       "thoughtseed_activations": {
         "attend_breath": 0.4825035720120339,
@@ -288,7 +288,7 @@
     },
     {
       "from": "redirect_breath",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.75176645026821,
         "pain_discomfort": 0.3439370604488201,
@@ -305,7 +305,7 @@
       "free_energy": 2.5143433740000414
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "mind_wandering",
       "thoughtseed_activations": {
         "attend_breath": 0.6113376037893901,
@@ -324,7 +324,7 @@
     },
     {
       "from": "mind_wandering",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.06211844178232204,
         "pain_discomfort": 0.725046781777617,
@@ -341,7 +341,7 @@
       "free_energy": 2.4126914286913563
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "redirect_breath",
       "thoughtseed_activations": {
         "attend_breath": 0.43404953619574077,
@@ -450,7 +450,7 @@
     },
     {
       "from": "mind_wandering",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.12594866761791568,
         "pain_discomfort": 0.9496291025089311,
@@ -467,7 +467,7 @@
       "free_energy": 2.633682744675345
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "mind_wandering",
       "thoughtseed_activations": {
         "attend_breath": 0.3810136989900881,
@@ -504,7 +504,7 @@
     },
     {
       "from": "meta_awareness",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.221884015632799,
         "pain_discomfort": 0.15795612823359906,
@@ -521,7 +521,7 @@
       "free_energy": 2.6003720685160125
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "meta_awareness",
       "thoughtseed_activations": {
         "attend_breath": 0.5497093799157586,
@@ -594,7 +594,7 @@
     },
     {
       "from": "redirect_breath",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.5955708535726715,
         "pain_discomfort": 0.40188428034680856,
@@ -611,7 +611,7 @@
       "free_energy": 1.9851939646597305
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "redirect_breath",
       "thoughtseed_activations": {
         "attend_breath": 0.4742309357256895,
@@ -630,7 +630,7 @@
     },
     {
       "from": "redirect_breath",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.5925672897423458,
         "pain_discomfort": 0.3698309501566544,
@@ -647,7 +647,7 @@
       "free_energy": 3.675377995508281
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "mind_wandering",
       "thoughtseed_activations": {
         "attend_breath": 0.5230037152249922,
@@ -684,7 +684,7 @@
     },
     {
       "from": "meta_awareness",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.074285518787602,
         "pain_discomfort": 0.06335750663818973,
@@ -701,7 +701,7 @@
       "free_energy": 2.9150710668720943
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "mind_wandering",
       "thoughtseed_activations": {
         "attend_breath": 0.4875909027807638,
@@ -756,7 +756,7 @@
     },
     {
       "from": "mind_wandering",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.01,
         "pain_discomfort": 0.5995751353153046,
@@ -773,7 +773,7 @@
       "free_energy": 3.4903817172981846
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "mind_wandering",
       "thoughtseed_activations": {
         "attend_breath": 0.5077188796392065,
@@ -792,7 +792,7 @@
     },
     {
       "from": "mind_wandering",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.01,
         "pain_discomfort": 0.8671037444140641,
@@ -809,7 +809,7 @@
       "free_energy": 1.5308524866206676
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "mind_wandering",
       "thoughtseed_activations": {
         "attend_breath": 0.4972118693591765,
@@ -882,7 +882,7 @@
     },
     {
       "from": "meta_awareness",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.22428983924277224,
         "pain_discomfort": 0.20792013700401235,
@@ -899,7 +899,7 @@
       "free_energy": 2.3989804813788917
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "redirect_breath",
       "thoughtseed_activations": {
         "attend_breath": 0.5351845225806456,
@@ -936,7 +936,7 @@
     },
     {
       "from": "mind_wandering",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.01,
         "pain_discomfort": 0.6013993825099335,
@@ -953,7 +953,7 @@
       "free_energy": 2.0608063619989294
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "redirect_breath",
       "thoughtseed_activations": {
         "attend_breath": 0.5457135549953956,
@@ -990,7 +990,7 @@
     },
     {
       "from": "meta_awareness",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.2858928270354423,
         "pain_discomfort": 0.24058805791666626,
@@ -1007,7 +1007,7 @@
       "free_energy": 3.089428364343747
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "redirect_breath",
       "thoughtseed_activations": {
         "attend_breath": 0.46786552543157245,
@@ -1116,7 +1116,7 @@
     },
     {
       "from": "meta_awareness",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.3097114930462776,
         "pain_discomfort": 0.1972263757523818,
@@ -1133,7 +1133,7 @@
       "free_energy": 1.9523976506536624
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "mind_wandering",
       "thoughtseed_activations": {
         "attend_breath": 0.47197960811279593,
@@ -1152,7 +1152,7 @@
     },
     {
       "from": "mind_wandering",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.06079416089736316,
         "pain_discomfort": 0.5635343835631104,
@@ -1169,7 +1169,7 @@
       "free_energy": 1.3830819461905044
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "redirect_breath",
       "thoughtseed_activations": {
         "attend_breath": 0.49540572728778887,
@@ -1260,7 +1260,7 @@
     },
     {
       "from": "meta_awareness",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.25389499851546976,
         "pain_discomfort": 0.2902386848636333,
@@ -1277,7 +1277,7 @@
       "free_energy": 2.0923669568110856
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "meta_awareness",
       "thoughtseed_activations": {
         "attend_breath": 0.4807890740761806,
@@ -1332,7 +1332,7 @@
     },
     {
       "from": "mind_wandering",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.01,
         "pain_discomfort": 0.3277312434790382,
@@ -1349,7 +1349,7 @@
       "free_energy": 2.148034564633943
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "mind_wandering",
       "thoughtseed_activations": {
         "attend_breath": 0.5231597312723462,
@@ -1404,7 +1404,7 @@
     },
     {
       "from": "redirect_breath",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.6074214574494412,
         "pain_discomfort": 0.6957287405437893,
@@ -1421,7 +1421,7 @@
       "free_energy": 2.273992543084832
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "mind_wandering",
       "thoughtseed_activations": {
         "attend_breath": 0.5389543907923332,
@@ -1494,7 +1494,7 @@
     },
     {
       "from": "redirect_breath",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.4762638633525312,
         "pain_discomfort": 0.480113745402297,
@@ -1511,7 +1511,7 @@
       "free_energy": 1.6159897796678497
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "redirect_breath",
       "thoughtseed_activations": {
         "attend_breath": 0.5492208041883709,
@@ -1620,7 +1620,7 @@
     },
     {
       "from": "mind_wandering",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.19553313582324863,
         "pain_discomfort": 0.7212917009810813,
@@ -1637,7 +1637,7 @@
       "free_energy": 1.3898142853399718
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "meta_awareness",
       "thoughtseed_activations": {
         "attend_breath": 0.5321397739215868,
@@ -1674,7 +1674,7 @@
     },
     {
       "from": "redirect_breath",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.624808488575748,
         "pain_discomfort": 0.514004195777487,
@@ -1691,7 +1691,7 @@
       "free_energy": 2.024065679472197
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "mind_wandering",
       "thoughtseed_activations": {
         "attend_breath": 0.4780927744835245,
@@ -1728,7 +1728,7 @@
     },
     {
       "from": "redirect_breath",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.526593425471041,
         "pain_discomfort": 0.336220771792168,
@@ -1745,7 +1745,7 @@
       "free_energy": 0.9309653033512593
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "redirect_breath",
       "thoughtseed_activations": {
         "attend_breath": 0.5647687660631439,
@@ -1782,7 +1782,7 @@
     },
     {
       "from": "meta_awareness",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.30045579014639257,
         "pain_discomfort": 0.08943391447881283,
@@ -1799,7 +1799,7 @@
       "free_energy": 5.4272661359860646
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "mind_wandering",
       "thoughtseed_activations": {
         "attend_breath": 0.6886161195390198,
@@ -1818,7 +1818,7 @@
     },
     {
       "from": "mind_wandering",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.12865663047058093,
         "pain_discomfort": 0.5903371233019643,
@@ -1835,7 +1835,7 @@
       "free_energy": 0.8622039171540979
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "redirect_breath",
       "thoughtseed_activations": {
         "attend_breath": 0.550446360417372,
@@ -1872,7 +1872,7 @@
     },
     {
       "from": "meta_awareness",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.4269758305665795,
         "pain_discomfort": 0.1954374570161549,
@@ -1889,7 +1889,7 @@
       "free_energy": 2.0360226176885616
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "meta_awareness",
       "thoughtseed_activations": {
         "attend_breath": 0.5194271513653884,
@@ -1926,7 +1926,7 @@
     },
     {
       "from": "redirect_breath",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.6100916590525262,
         "pain_discomfort": 0.22733269121790117,
@@ -1943,7 +1943,7 @@
       "free_energy": 2.61366489973763
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "mind_wandering",
       "thoughtseed_activations": {
         "attend_breath": 0.4888992909862161,
@@ -1980,7 +1980,7 @@
     },
     {
       "from": "redirect_breath",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.47249320848556997,
         "pain_discomfort": 0.2899694966291515,
@@ -1997,7 +1997,7 @@
       "free_energy": 1.6231855311988586
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "mind_wandering",
       "thoughtseed_activations": {
         "attend_breath": 0.5242498772224582,
@@ -2016,7 +2016,7 @@
     },
     {
       "from": "mind_wandering",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.08199256552273425,
         "pain_discomfort": 0.5028373157028847,
@@ -2033,7 +2033,7 @@
       "free_energy": 2.140490169181434
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "mind_wandering",
       "thoughtseed_activations": {
         "attend_breath": 0.49946640311724055,
@@ -2052,7 +2052,7 @@
     },
     {
       "from": "mind_wandering",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.01,
         "pain_discomfort": 0.44753482786934634,
@@ -2069,7 +2069,7 @@
       "free_energy": 1.7534548611345484
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "mind_wandering",
       "thoughtseed_activations": {
         "attend_breath": 0.5024067142803083,
@@ -2106,7 +2106,7 @@
     },
     {
       "from": "meta_awareness",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.33982705073089997,
         "pain_discomfort": 0.1944654895030774,
@@ -2123,7 +2123,7 @@
       "free_energy": 4.698312234402955
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "meta_awareness",
       "thoughtseed_activations": {
         "attend_breath": 0.40817228405902134,
@@ -2178,7 +2178,7 @@
     },
     {
       "from": "mind_wandering",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.03901984542342044,
         "pain_discomfort": 0.6762444351552896,
@@ -2195,7 +2195,7 @@
       "free_energy": 0.9584698425373173
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "redirect_breath",
       "thoughtseed_activations": {
         "attend_breath": 0.45707073300108625,
@@ -2232,7 +2232,7 @@
     },
     {
       "from": "mind_wandering",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.0811843053128312,
         "pain_discomfort": 0.6294091315847038,
@@ -2249,7 +2249,7 @@
       "free_energy": 0.6587779094022834
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "meta_awareness",
       "thoughtseed_activations": {
         "attend_breath": 0.4953937523390755,
@@ -2268,7 +2268,7 @@
     },
     {
       "from": "meta_awareness",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.3264879421341145,
         "pain_discomfort": 0.21398410107054777,
@@ -2285,7 +2285,7 @@
       "free_energy": 2.8594535552425486
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "meta_awareness",
       "thoughtseed_activations": {
         "attend_breath": 0.4860345893353078,
@@ -2304,7 +2304,7 @@
     },
     {
       "from": "meta_awareness",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.27787051890602665,
         "pain_discomfort": 0.350165703257296,
@@ -2321,7 +2321,7 @@
       "free_energy": 2.1390108442562434
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "meta_awareness",
       "thoughtseed_activations": {
         "attend_breath": 0.47268791680484756,
@@ -2574,7 +2574,7 @@
     },
     {
       "from": "meta_awareness",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.2905231364161194,
         "pain_discomfort": 0.06942770229741049,
@@ -2591,7 +2591,7 @@
       "free_energy": 5.725214938092236
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "meta_awareness",
       "thoughtseed_activations": {
         "attend_breath": 0.5971613013912915,
@@ -2610,7 +2610,7 @@
     },
     {
       "from": "meta_awareness",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.03601360071178429,
         "pain_discomfort": 0.23476515672219544,
@@ -2627,7 +2627,7 @@
       "free_energy": 2.8928932424840643
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "redirect_breath",
       "thoughtseed_activations": {
         "attend_breath": 0.4947957135807274,
@@ -2646,7 +2646,7 @@
     },
     {
       "from": "redirect_breath",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.6674193001110522,
         "pain_discomfort": 0.42220666638946314,
@@ -2663,7 +2663,7 @@
       "free_energy": 1.2434550531489756
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "redirect_breath",
       "thoughtseed_activations": {
         "attend_breath": 0.5824123332663015,
@@ -2700,7 +2700,7 @@
     },
     {
       "from": "meta_awareness",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.3825988831528613,
         "pain_discomfort": 0.21520049669942387,
@@ -2717,7 +2717,7 @@
       "free_energy": 3.56650802578064
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "mind_wandering",
       "thoughtseed_activations": {
         "attend_breath": 0.5697130452936501,
@@ -2736,7 +2736,7 @@
     },
     {
       "from": "mind_wandering",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.2877635191777237,
         "pain_discomfort": 0.2870056619602642,
@@ -2753,7 +2753,7 @@
       "free_energy": 0.8849044142516176
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "redirect_breath",
       "thoughtseed_activations": {
         "attend_breath": 0.5290283365581607,
@@ -2790,7 +2790,7 @@
     },
     {
       "from": "meta_awareness",
-      "to": "breath_control",
+      "to": "breath_focus",
       "thoughtseed_activations": {
         "attend_breath": 0.3092400940038432,
         "pain_discomfort": 0.2961032808389738,
@@ -2807,7 +2807,7 @@
       "free_energy": 1.4248212381945664
     },
     {
-      "from": "breath_control",
+      "from": "breath_focus",
       "to": "redirect_breath",
       "thoughtseed_activations": {
         "attend_breath": 0.6109946334065846,
@@ -4846,7 +4846,7 @@
     0.0
   ],
   "average_activations_at_transition": {
-    "breath_control": [
+    "breath_focus": [
       0.5183790600727762,
       0.9243972072933379,
       0.9088100109500561,
@@ -4876,7 +4876,7 @@
     ]
   },
   "average_network_activations_by_state": {
-    "breath_control": {
+    "breath_focus": {
       "DMN": 0.605121939480863,
       "VAN": 0.5418431634724427,
       "DAN": 0.5568138295391396,
@@ -4902,7 +4902,7 @@
     }
   },
   "average_free_energy_by_state": {
-    "breath_control": 1.9983056670400159,
+    "breath_focus": 1.9983056670400159,
     "mind_wandering": 1.8382511097523073,
     "meta_awareness": 2.168907770604084,
     "redirect_breath": 1.819745631456964

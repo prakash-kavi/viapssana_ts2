@@ -121,7 +121,7 @@ class Trainer:
         )
 
         # E. Track Distraction Buildup
-        if current_state in ["breath_control", "redirect_breath"]:
+        if current_state in ["breath_focus", "redirect_breath"]:
             time_in_focused_state += 1
             progress = min(1.5, current_dwell / max(10, dwell_limit))
             self.agent.distraction_buildup_rates.append(self.agent.distraction_pressure * progress)

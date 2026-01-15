@@ -194,7 +194,7 @@ class ActInfAgent(AgentConfig):
         current_dmn = self.prev_network_acts.get('DMN', 0)
         
         # A. FPN Regulation (Neural Efficiency)
-        if current_state in ['breath_control', 'redirect_breath']:
+        if current_state in ['breath_focus', 'redirect_breath']:
             focus_error = max(0, self.dan_focus_target - current_dan)
             fpn_demand = self.fpn_base_demand + (self.fpn_focus_mult * focus_error)
 
@@ -441,7 +441,7 @@ class ActInfAgent(AgentConfig):
                 mu[i] += modulations[ts]
         
         # Apply dynamic modifiers (Distraction Buildup & Fatigue)
-        if current_state in ["breath_control", "redirect_breath"]:
+        if current_state in ["breath_focus", "redirect_breath"]:
             # Distraction increases over time in focused states
             progress = min(1.5, current_dwell / max(5, dwell_limit))
             
@@ -477,7 +477,7 @@ class ActInfAgent(AgentConfig):
                     theta *= 0.5
 
             # Focused states are more stable
-            if current_state == "breath_control" and ts == "attend_breath":
+            if current_state == "breath_focus" and ts == "attend_breath":
                 sigma *= 0.5
                 theta *= 1.5
 
