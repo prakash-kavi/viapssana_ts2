@@ -73,5 +73,5 @@ python -m viz.plot_convergence
 python - <<'PY'
 from meditation_model import ActInfAgent
 from meditation_trainer import Trainer
-Trainer(ActInfAgent('novice', timesteps_per_cycle=500)).train(save_outputs=True, output_dir='data/run_500', seed=2026)
+Trainer(ActInfAgent('novice', timesteps_per_cycle=500)).train(save_outputs=True, output_dir='data/run_500', seed=42)
 

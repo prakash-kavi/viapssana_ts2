@@ -1,38 +1,12 @@
-"""
-meditation_config.py
+"""Configuration for the Vipassana Entropy meditation simulation.
 
-This file contains configuration data for the Vipassana Entropy meditation simulation,
-using dataclasses for improved type safety and maintainability.
+Note: external JSON-based config loading (e.g. `config/config.json`) is
+possible for experiment workflows but is not enabled in this file.
 """
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from typing import Dict, List, Tuple, Optional, Union
 import numpy as np
-import json
-import os
-
-# Helper: attempt to load a JSON config from the same `config/` directory (package)
-def _load_config_json(name: str) -> Optional[Dict]:
-    """Load optional JSON `<config_dir>/<name>`; return dict or None.
-
-    JSON overrides are optional; defaults live in the Python code.
-    Consider storing profiles under `config/profiles/`.
-    """
-    base_dir = os.path.dirname(__file__)
-    # First check current config directory, then `config/profiles/` for overrides.
-    candidates = [
-        os.path.join(base_dir, name),
-        os.path.join(base_dir, 'profiles', name)
-    ]
-    for cfg_path in candidates:
-        if not os.path.exists(cfg_path):
-            continue
-        try:
-            with open(cfg_path, 'r', encoding='utf-8') as fh:
-                return json.load(fh)
-        except Exception:
-            continue
-    return None
 
 # Core thoughtseed and state definitions
 THOUGHTSEEDS = ['breath_focus', 'pain_discomfort', 'pending_tasks', 'self_reflection', 'equanimity']
@@ -112,60 +86,6 @@ class StateTargetActivations:
             "pending_tasks": self.pending_tasks,
             "self_reflection": self.self_reflection
         }
-
-
-
-
-def load_actinf_params_from_json(path: Optional[str], experience_level: str = 'novice') -> 'ActInfParams':
-    """Load ActInfParams from JSON file. If file missing or key absent, fall back to defaults.
-
-    Expects JSON with top-level keys `novice` and `expert` mapping to param dicts, or a flat dict.
-    """
-    if not path:
-        return ActInfParams.expert() if experience_level == 'expert' else ActInfParams.novice()
-
-    try:
-        with open(path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-    except Exception:
-        return ActInfParams.expert() if experience_level == 'expert' else ActInfParams.novice()
-
-    if isinstance(data, dict) and experience_level in data:
-        cfg = data[experience_level]
-    else:
-        cfg = data
-
-    # Basic validation: ensure keys exist and types are plausible before constructing dataclass.
-    def _validate_cfg(cfg_dict: Dict) -> bool:
-        if not isinstance(cfg_dict, dict):
-            return False
-        # numeric keys we expect to be floats/ints
-        numeric_keys = [
-            'precision_weight', 'learning_rate', 'noise_level', 'memory_factor',
-            'fpn_enhancement', 'distraction_pressure', 'fatigue_rate',
-            'vfe_accum_decay', 'vfe_accum_alpha', 'fpn_accum_decay', 'fpn_accum_inc'
-        ]
-        for k in numeric_keys:
-            if k in cfg_dict and not isinstance(cfg_dict[k], (int, float)):
-                return False
-        # transition thresholds must be dict with numeric entries if present
-        tt = cfg_dict.get('transition_thresholds')
-        if tt is not None:
-            if not isinstance(tt, dict):
-                return False
-            for kk in ['mind_wandering', 'dmn_dan_ratio', 'meta_awareness', 'return_focus']:
-                if kk in tt and not isinstance(tt[kk], (int, float)):
-                    return False
-        return True
-
-    if not _validate_cfg(cfg):
-        # fallback to defaults if validation fails
-        return ActInfParams.expert() if experience_level == 'expert' else ActInfParams.novice()
-
-    try:
-        return ActInfParams.from_dict(cfg, experience_level=experience_level)
-    except Exception:
-        return ActInfParams.expert() if experience_level == 'expert' else ActInfParams.novice()
 
 @dataclass
 class ActInfParams:
@@ -258,7 +178,7 @@ class ActInfParams:
             hysteresis_strength=0.1,
             anticorrelation_force=0.25,
             van_spike=0.5,
-            # surface/modulation defaults (will migrate next)
+            # surface/modulation defaults
             dmn_pending_value=0.15,
             dmn_reflection_value=0.05,
             dmn_breath_value=0.2,
@@ -310,7 +230,7 @@ class ActInfParams:
             hysteresis_strength=0.2,
             anticorrelation_force=0.25,
             van_spike=0.5,
-            # surface/modulation defaults (will migrate next)
+            # surface/modulation defaults
             dmn_pending_value=0.15,
             dmn_reflection_value=0.05,
             dmn_breath_value=0.2,
@@ -325,107 +245,24 @@ class ActInfParams:
             transition_thresholds=TransitionThresholds.expert()
         )
 
-    @classmethod
-    def from_dict(cls, data: Dict[str, Union[float, Dict]], experience_level: str = 'novice') -> 'ActInfParams':
-        """Create ActInfParams from a flat dictionary (with nested transition_thresholds dict).
-
-        Missing keys are filled from the corresponding `novice()`/`expert()` defaults.
-        """
-        base = cls.expert() if experience_level == 'expert' else cls.novice()
-        base_dict = base.as_dict()
-
-        # Merge provided values
-        merged = base_dict.copy()
-        merged.update(data or {})
-
-        # Build TransitionThresholds object
-        tt = merged.get('transition_thresholds', None)
-        if isinstance(tt, dict):
-            tt_obj = TransitionThresholds(
-                mind_wandering=float(tt.get('mind_wandering', base.transition_thresholds.mind_wandering)),
-                dmn_dan_ratio=float(tt.get('dmn_dan_ratio', base.transition_thresholds.dmn_dan_ratio)),
-                meta_awareness=float(tt.get('meta_awareness', base.transition_thresholds.meta_awareness)),
-                return_focus=float(tt.get('return_focus', base.transition_thresholds.return_focus)),
-            )
-        else:
-            tt_obj = base.transition_thresholds
-
-        merged['transition_thresholds'] = tt_obj
-
-        return cls(**merged)
-    
-    def as_dict(self) -> Dict[str, Union[float, Dict]]:
-        """Convert to dictionary for compatibility with existing code"""
-        return {
-            'precision_weight': self.precision_weight,
-            'complexity_penalty': self.complexity_penalty,
-            'learning_rate': self.learning_rate,
-            'noise_level': self.noise_level,
-            'memory_factor': self.memory_factor,
-            'fpn_enhancement': self.fpn_enhancement,
-            'base_theta': self.base_theta,
-            'base_sigma': self.base_sigma,
-            'fpn_reflection_value': self.fpn_reflection_value,
-            'fpn_equanimity_value': self.fpn_equanimity_value,
-            'distraction_pressure': self.distraction_pressure,
-            'fatigue_rate': self.fatigue_rate,
-            'smoothing': self.smoothing,
-            'blend_factor_transition': self.blend_factor_transition,
-            'blend_factor_state': self.blend_factor_state,
-            'blend_variation': self.blend_variation,
-            'transition_perturb_std': self.transition_perturb_std,
-            'transition_variation_low': self.transition_variation_low,
-            'transition_variation_high': self.transition_variation_high,
-            'vfe_accum_decay': self.vfe_accum_decay,
-            'vfe_accum_alpha': self.vfe_accum_alpha,
-            'fpn_accum_decay': self.fpn_accum_decay,
-            'fpn_accum_inc': self.fpn_accum_inc,
-            'fatigue_reset': self.fatigue_reset,
-            'fpn_collapse_dan_mult': self.fpn_collapse_dan_mult,
-            'fpn_collapse_dmn_inc': self.fpn_collapse_dmn_inc,
-            'fpn_base_demand': self.fpn_base_demand,
-            'fpn_focus_mult': self.fpn_focus_mult,
-            'network_base': self.network_base,
-            'fpn_to_dan_gain': self.fpn_to_dan_gain,
-            'hysteresis_strength': self.hysteresis_strength,
-            'anticorrelation_force': self.anticorrelation_force,
-            'van_spike': self.van_spike,
-            'softmax_temperature': self.softmax_temperature,
-            'dmn_pending_value': self.dmn_pending_value,
-            'dmn_reflection_value': self.dmn_reflection_value,
-            'dmn_breath_value': self.dmn_breath_value,
-            'van_pain_value': self.van_pain_value,
-            'van_reflection_value': self.van_reflection_value,
-            'dan_breath_value': self.dan_breath_value,
-            'dan_pending_value': self.dan_pending_value,
-            'dan_pain_value': self.dan_pain_value,
-            'efficiency_weight': self.efficiency_weight,
-            'fatigue_threshold': self.fatigue_threshold,
-            'transition_thresholds': {
-                'mind_wandering': self.transition_thresholds.mind_wandering,
-                'dmn_dan_ratio': self.transition_thresholds.dmn_dan_ratio,
-                'meta_awareness': self.transition_thresholds.meta_awareness,
-                'return_focus': self.transition_thresholds.return_focus
-            }
-        }
-
-
 # Create the base configurations as module-level constants
 STATE_DWELL_TIMES = {
+    # Per-experience-level dwell time ranges (min, max) for each state
     'novice': DwellTimeConfig.novice().__dict__,
     'expert': DwellTimeConfig.expert().__dict__
 }
 
 # Project-wide numeric defaults to avoid magic numbers
 DEFAULTS = {
-    'TARGET_CLIP_MIN': 0.05,
-    'TARGET_CLIP_MAX': 1.0,
+    # Numeric clamps and thresholds used across the simulation
+    'TARGET_CLIP_MIN': 0.05,  # lower bound for thoughtseed target activations
+    'TARGET_CLIP_MAX': 1.0,   # upper bound for thoughtseed target activations
     'ACTIVATION_CLIP_MIN': 0.01,
     'ACTIVATION_CLIP_MAX': 0.99,
-    'NETWORK_CLIP_MIN': 0.05,
-    'NETWORK_CLIP_MAX': 0.9,
-    'VAN_TRIGGER': 0.7,
-    'VAN_MAX': 0.85,
+    'NETWORK_CLIP_MIN': 0.05,  # network activation lower bound
+    'NETWORK_CLIP_MAX': 0.9,   # network activation upper bound
+    'VAN_TRIGGER': 0.7,        # VAN accumulator threshold for salience spike
+    'VAN_MAX': 0.85,           # physiological cap for VAN
     'DEFAULT_DT': 1.0,
     'MIN_HISTORY_FOR_LEARNING': 10
 }
@@ -436,10 +273,6 @@ DEFAULTS.update({
     'TRANSITION_COUNTER_RAND': 2,
 })
 
-# Additional surface/modulation defaults (moved from hard-coded locations)
-# Surface/modulation defaults intentionally left out — per-agent values live in ActInfParams
-# Default surface/modulation values are now provided by `ActInfParams` and optional JSON profiles.
- 
 # Network profiles for thoughtseeds and states
 NETWORK_PROFILES = {
     "thoughtseed_contributions": {
@@ -451,6 +284,7 @@ NETWORK_PROFILES = {
     },
     
     # State profiles differentiated by experience level
+    # Expected network activations per high-level state and experience level
     "state_expected_profiles": {
         # BREATH CONTROL: Experts have lower DMN, higher DAN/FPN
         "breath_control": {
@@ -477,29 +311,6 @@ NETWORK_PROFILES = {
         }
     }
 }
-
-# Attempt to override hard-coded constants with files in `config/` when available.
-# This makes runtime behavior configurable without editing Python sources.
-_cfg = _load_config_json('state_dwell_times.json')
-if isinstance(_cfg, dict):
-    try:
-        STATE_DWELL_TIMES = _cfg
-    except Exception:
-        pass
-
-_cfg = _load_config_json('network_profiles.json')
-if isinstance(_cfg, dict):
-    try:
-        NETWORK_PROFILES = _cfg
-    except Exception:
-        pass
-
-_cfg = _load_config_json('defaults_global.json')
-if isinstance(_cfg, dict):
-    try:
-        DEFAULTS.update(_cfg)
-    except Exception:
-        pass
 
 @dataclass
 class ThoughtseedParams:
@@ -637,9 +448,7 @@ class MetacognitionParams:
     
     @staticmethod
     def calculate_meta_awareness(state, thoughtseed_activations, experience_level='novice'):
-        """
-        Calculate meta-awareness based on state, thoughtseed activations, and experience.
-        """
+        """Compute meta-awareness from state and thoughtseed activations."""
         # Get base awareness for this state
         base_awareness = MetacognitionParams.BASE_AWARENESS[state]
         
@@ -653,7 +462,3 @@ class MetacognitionParams:
         meta_awareness = base_awareness + awareness_boost
         
         return meta_awareness
-
-def get_actinf_params_dict(experience_level: str) -> Dict[str, Union[float, Dict]]:
-    """Return a params dict for the requested experience level using `ActInfParams` dataclass."""
-    return ActInfParams.expert().as_dict() if experience_level == 'expert' else ActInfParams.novice().as_dict()
